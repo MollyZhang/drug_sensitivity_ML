@@ -1,4 +1,4 @@
-//    impliment basic commandline psl example
+//    implement toy cell line sensitity to drug exaxmple
 
 package edu.umd.cs.example;
 
@@ -31,23 +31,26 @@ import edu.umd.cs.psl.util.database.Queries;
 
 ////////////////////////// initial setup ////////////////////////
 ConfigManager cm = ConfigManager.getManager()
-ConfigBundle config = cm.getBundle("basic-example")
+ConfigBundle config = cm.getBundle("toy-drug-example")
 
 def defaultPath = System.getProperty("java.io.tmpdir")
-String dbpath = config.getString("dbpath", defaultPath + File.separator + "basic-example")
+String dbpath = config.getString("dbpath", defaultPath + File.separator + "toy-drug-example")
 DataStore data = new RDBMSDataStore(new H2DatabaseDriver(Type.Disk, dbpath, true), config)
 PSLModel m = new PSLModel(this, data)
 
 ////////////////////////// predicate declaration ////////////////////////
-m.add predicate: "Person",       types: [ArgumentType.UniqueID, ArgumentType.String]
-m.add predicate: "Location",     types: [ArgumentType.UniqueID, ArgumentType.String]
-m.add predicate: "Knows",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-m.add predicate: "Lives",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+m.add predicate: "Drug",       types: [ArgumentType.UniqueID, ArgumentType.String]
+m.add predicate: "Gene",       types: [ArgumentType.UniqueID, ArgumentType.String]
+m.add predicate: "Cell",     types: [ArgumentType.UniqueID, ArgumentType.String]
+m.add predicate: "Targets",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+m.add predicate: "Essential",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+m.add predicate: "Sensitive",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 
 ///////////////////////////// rules ////////////////////////////////////
-m.add rule : ( Knows(P1, P2) & Lives(P1, L) ) >> Lives(P2, L),  weight : 10
-m.add rule : ( Knows(P2, P1) & Lives(P1, L) ) >> Lives(P2, L),  weight : 10
-m.add rule: ~Lives(P, L), weight: 2
+m.add rule : ( Targets(D1, G1) & Essential(C1, G1) ) >> Sensitive(C1, D1),  weight : 10
+m.add rule : ( Targets(D1, G1) & Active(C1, G1) ) >> Sensitive(C1, D1),  weight : 5
+m.add rule: ~Sensitive(C1, D1), weight: 2
 
 println m;
 
