@@ -5,6 +5,7 @@ To read more about CCLE: https://portals.broadinstitute.org/ccle/home
 
 ### project structure (updated 9-22-2016)
     psl/    folder containing maven project and java/groovy/python codes for PSL applied to drug sensitity data
+    
     profiling/  python or jupyter notebook script aiming at understanding/profiling of data
     
 
