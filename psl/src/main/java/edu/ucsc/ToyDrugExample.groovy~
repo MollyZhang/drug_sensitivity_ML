@@ -44,40 +44,43 @@ m.add predicate: "Gene",       types: [ArgumentType.UniqueID, ArgumentType.Strin
 m.add predicate: "Cell",     types: [ArgumentType.UniqueID, ArgumentType.String]
 m.add predicate: "Targets",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Essential",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+//m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Sensitive",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 
 ///////////////////////////// rules ////////////////////////////////////
 m.add rule : ( Targets(D1, G1) & Essential(C1, G1) ) >> Sensitive(C1, D1),  weight : 10
-m.add rule : ( Targets(D1, G1) & Active(C1, G1) ) >> Sensitive(C1, D1),  weight : 5
+//m.add rule : ( Targets(D1, G1) & Active(C1, G1) ) >> Sensitive(C1, D1),  weight : 5
 m.add rule: ~Sensitive(C1, D1), weight: 2
 
 println m;
 
 //////////////////////////// data setup ///////////////////////////
 // loads data
-def dir = 'data'+java.io.File.separator+'cli'+java.io.File.separator;
+def dir = 'data'+java.io.File.separator;
 def evidencePartition = new Partition(0);
 
-insert = data.getInserter(Person, evidencePartition);
-InserterUtils.loadDelimitedData(insert, dir+"person.txt");
+insert = data.getInserter(Drug, evidencePartition);
+InserterUtils.loadDelimitedData(insert, dir+"drug.txt");
 
-insert = data.getInserter(Location, evidencePartition);
-InserterUtils.loadDelimitedData(insert, dir+"location.txt");
+insert = data.getInserter(Gene, evidencePartition);
+InserterUtils.loadDelimitedData(insert, dir+"gene.txt");
 
-insert = data.getInserter(Knows, evidencePartition);
-InserterUtils.loadDelimitedData(insert, dir+"knows.txt");
+insert = data.getInserter(Cell, evidencePartition);
+InserterUtils.loadDelimitedData(insert, dir+"cell.txt");
 
-insert = data.getInserter(Lives, evidencePartition);
-InserterUtils.loadDelimitedData(insert, dir+"lives.txt");
+insert = data.getInserter(Targets, evidencePartition);
+InserterUtils.loadDelimitedData(insert, dir+"targets.txt");
+
+insert = data.getInserter(Essential, evidencePartition);
+InserterUtils.loadDelimitedData(insert, dir+"essential.txt");
 
 // add target atoms
 def targetPartition = new Partition(1);
-insert = data.getInserter(Lives, targetPartition);
-InserterUtils.loadDelimitedData(insert, dir+"lives_targets.txt");
+insert = data.getInserter(Sensitive, targetPartition);
+InserterUtils.loadDelimitedData(insert, dir+"sensitive.txt");
 
 
-Database db = data.getDatabase(targetPartition, [Person, Location, Knows] as Set, evidencePartition);
+Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, Targets, Essential] as Set, evidencePartition);
 
 //////////////////////////// run inference ///////////////////////////
 MPEInference inferenceApp = new MPEInference(m, db, config);
@@ -86,16 +89,7 @@ inferenceApp.close();
 
 println "Inference results with hand-defined weights:"
 DecimalFormat formatter = new DecimalFormat("#.##");
-for (GroundAtom atom : Queries.getAllAtoms(db, Person))
-    println atom.toString() + "\t" + formatter.format(atom.getValue());
-
-for (GroundAtom atom : Queries.getAllAtoms(db, Location))
-    println atom.toString() + "\t" + formatter.format(atom.getValue());
-
-for (GroundAtom atom : Queries.getAllAtoms(db, Knows))
-    println atom.toString() + "\t" + formatter.format(atom.getValue());
-
-for (GroundAtom atom : Queries.getAllAtoms(db, Lives))
+for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive))
     println atom.toString() + "\t" + formatter.format(atom.getValue());
 
 
