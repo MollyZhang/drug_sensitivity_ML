@@ -1,0 +1,4 @@
+1	EGFR
+2	MDM2
+3	IAP
+4	HSP90

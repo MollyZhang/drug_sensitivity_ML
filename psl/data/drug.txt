@@ -1,4 +1,4 @@
-1   Erlotinib
-2   Nutlin-3
-3   LBW242
-4   17-AAG
+1	Erlotinib
+2	Nutlin-3
+3	LBW242
+4	17-AAG
