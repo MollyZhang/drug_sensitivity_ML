@@ -44,12 +44,12 @@ m.add predicate: "Gene",       types: [ArgumentType.UniqueID, ArgumentType.Strin
 m.add predicate: "Cell",     types: [ArgumentType.UniqueID, ArgumentType.String]
 m.add predicate: "Targets",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Essential",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-//m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Sensitive",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 
 ///////////////////////////// rules ////////////////////////////////////
 m.add rule : ( Targets(D1, G1) & Essential(C1, G1) ) >> Sensitive(C1, D1),  weight : 10
-//m.add rule : ( Targets(D1, G1) & Active(C1, G1) ) >> Sensitive(C1, D1),  weight : 5
+m.add rule : ( Targets(D1, G1) & Active(C1, G1) ) >> Sensitive(C1, D1),  weight : 5
 m.add rule: ~Sensitive(C1, D1), weight: 2
 
 println m;
@@ -77,7 +77,7 @@ InserterUtils.loadDelimitedData(insert, dir+"essential.txt");
 // add target atoms
 def targetPartition = new Partition(1);
 insert = data.getInserter(Sensitive, targetPartition);
-InserterUtils.loadDelimitedData(insert, dir+"sensitive.txt");
+InserterUtils.loadDelimitedData(insert, dir+"sensitive_target.txt");
 
 
 Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, Targets, Essential] as Set, evidencePartition);
