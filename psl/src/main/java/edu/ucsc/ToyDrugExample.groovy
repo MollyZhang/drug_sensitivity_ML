@@ -72,7 +72,11 @@ insert = data.getInserter(Targets, evidencePartition);
 InserterUtils.loadDelimitedData(insert, dir+"targets.txt");
 
 insert = data.getInserter(Essential, evidencePartition);
-InserterUtils.loadDelimitedData(insert, dir+"essential.txt");
+InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
+
+insert = data.getInserter(Active, evidencePartition);
+InserterUtils.loadDelimitedDataTruth(insert, dir+"active.txt");
+
 
 // add target atoms
 def targetPartition = new Partition(1);
@@ -80,7 +84,7 @@ insert = data.getInserter(Sensitive, targetPartition);
 InserterUtils.loadDelimitedData(insert, dir+"sensitive_target.txt");
 
 
-Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, Targets, Essential] as Set, evidencePartition);
+Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, Targets, Essential, Active] as Set, evidencePartition);
 
 //////////////////////////// run inference ///////////////////////////
 MPEInference inferenceApp = new MPEInference(m, db, config);
