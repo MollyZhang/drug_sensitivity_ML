@@ -48,9 +48,9 @@ m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.Un
 m.add predicate: "Sensitive",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 
 ///////////////////////////// rules ////////////////////////////////////
-m.add rule : ( Targets(D1, G1) & Essential(C1, G1) ) >> Sensitive(C1, D1),  weight : 10
-m.add rule : ( Targets(D1, G1) & Active(C1, G1) ) >> Sensitive(C1, D1),  weight : 5
-m.add rule: ~Sensitive(C1, D1), weight: 2
+m.add rule : ( Targets(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
+m.add rule : ( Targets(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
+m.add rule: ~Sensitive(C, D), weight: 2
 
 println m;
 
@@ -92,10 +92,15 @@ inferenceApp.mpeInference();
 inferenceApp.close();
 
 println "Inference results with hand-defined weights:"
-DecimalFormat formatter = new DecimalFormat("#.##");
-for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive))
+DecimalFormat formatter = new DecimalFormat("#.###");
+def result_file = new File("result/toy_inference_result.txt");
+result_file.write ""
+for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
     println atom.toString() + "\t" + formatter.format(atom.getValue());
-
+    for (int i=0; i<2; i++) {
+        result_file << atom.arguments[i].toString() + "\t"
+    }
+    result_file << formatter.format(atom.getValue()) + "\n"}
 
 //////////////////////////// weight learning ///////////////////////////
 Partition trueDataPartition = new Partition(2);
