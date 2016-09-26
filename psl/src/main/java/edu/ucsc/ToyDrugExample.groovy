@@ -97,14 +97,12 @@ for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive))
     println atom.toString() + "\t" + formatter.format(atom.getValue());
 
 
-/*
-
 //////////////////////////// weight learning ///////////////////////////
 Partition trueDataPartition = new Partition(2);
-insert = data.getInserter(SamePerson, trueDataPartition)
-InserterUtils.loadDelimitedDataTruth(insert, dir + "sn_align.txt");
+insert = data.getInserter(Sensitive, trueDataPartition)
+InserterUtils.loadDelimitedDataTruth(insert, dir + "sensitive_truth.txt");
 
-Database trueDataDB = data.getDatabase(trueDataPartition, [samePerson] as Set);
+Database trueDataDB = data.getDatabase(trueDataPartition, [Sensitive] as Set);
 MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(m, db, trueDataDB, config);
 weightLearning.learn();
 weightLearning.close();
@@ -116,4 +114,3 @@ println m
 // close the Databases to flush writes
 db.close();
 trueDataDB.close();
-*/
