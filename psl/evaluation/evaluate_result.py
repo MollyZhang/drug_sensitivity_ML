@@ -1,12 +1,13 @@
 import sklearn.metrics
 import pandas as pd
 
-TRUTH_FILE = "../data/sensitive_truth.txt"
+TRUTH_FILE = "../data/ToyDrugExample/sensitive_truth.txt"
 INFER_RESULT = "../result/toy_inference_result.txt"
 
 
 def main():
     results = load_data(TRUTH_FILE, INFER_RESULT)
+    print results
     truth = list(results.loc["truth"])
     inference = list(results.loc["inference"])
     print "mean squared error", sklearn.metrics.mean_squared_error(truth, inference)

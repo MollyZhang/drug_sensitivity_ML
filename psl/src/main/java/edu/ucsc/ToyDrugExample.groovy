@@ -56,7 +56,7 @@ println m;
 
 //////////////////////////// data setup ///////////////////////////
 // loads data
-def dir = 'data'+java.io.File.separator;
+def dir = 'data'+java.io.File.separator +"ToyDrugExample"+java.io.File.separator;
 def evidencePartition = new Partition(0);
 
 insert = data.getInserter(Drug, evidencePartition);
