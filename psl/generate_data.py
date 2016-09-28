@@ -2,7 +2,7 @@
 
 import pandas as pd
 import numpy as np
-
+from pprint import pprint as pp
 
 DRUG_TARGET_RAW = "../data/combined_annotations_CCLEmapped.tab"
 ESSEN_RAW = "../data/Achilles_QC_v2.4.3.rnai.Gs.gct"
@@ -11,27 +11,36 @@ DRUG_RESPON_RAW = "../data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 
 
 def main():
-    #drug()
-    #gene()
-    cell()
+    drug_keys = drug()
+    gene_keys = gene()
+    #cell()
+    target(drug_keys, gene_keys)
 
 
 def drug():
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     drug_set = set(df[1])
+    drug_keys = {}
     with open("data/first_model/drug.txt", "w") as f:
         for i, drug in enumerate(drug_set):
-            f.write("D{0}\t{1}\n".format(i, drug))
+            key = "D" + str(i)
+            drug_keys[drug] = key
+            f.write("{0}\t{1}\n".format(key, drug))
         f.close()
+    return drug_keys
 
 
 def gene():
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     gene_set = set(df[0])
+    gene_keys = {}
     with open("data/first_model/gene.txt", "w") as f:
         for i, gene in enumerate(gene_set):
-            f.write("G{0}\t{1}\n".format(i, gene))
+            key = "G" + str(i)
+            gene_keys[gene] = key
+            f.write("G{0}\t{1}\n".format(key, gene))
         f.close()
+    return gene_keys
 
 
 def cell():
@@ -54,6 +63,21 @@ def cell():
         for i, cell in enumerate(cell_set):
             f.write("C{0}\t{1}\n".format(i, cell))
         f.close()
+
+
+def target(drug_keys, gene_keys):
+    df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
+    target = {}
+    for drug, gene in zip(df[1], df[0]):
+        if drug in target.keys():
+            target[drug].append(gene)
+        else:
+            target[drug] = [gene]
+    f = open("data/first_model/target.txt", "w")
+    for drug, genes in target.iteritems():
+        for gene in genes:
+            f.write("{0}\t{1}\n".format(drug_keys[drug], gene_keys[gene]))
+    f.close()
 
     
 if __name__=="__main__":
