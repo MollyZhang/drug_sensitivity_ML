@@ -6,3 +6,4 @@ data/*
 *classpath*
 *.project
 *result/
+*.swp
