@@ -10,6 +10,8 @@ DRUG_TARGET_RAW = "../data/combined_annotations_CCLEmapped.tab"
 
 def main():
     drug()
+    gene()
+
 
 
 
@@ -21,8 +23,14 @@ def drug():
             f.write("D{0}\t{1}\n".format(i, drug))
         f.close()
 
+
 def gene():
-    pass
+    df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
+    gene_set = set(df[0])
+    with open("data/first_model/gene.txt", "w") as f:
+        for i, gene in enumerate(gene_set):
+            f.write("G{0}\t{1}\n".format(i, gene))
+        f.close()
 
     
 if __name__=="__main__":
