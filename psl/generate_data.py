@@ -18,7 +18,8 @@ def main():
     cell_keys = cell()
     #target(drug_keys, gene_keys)
     essential(cell_keys, gene_keys)
-    #active()
+    #active(cell_keys, gene_keys)
+
 
 def drug():
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
@@ -91,35 +92,6 @@ def target(drug_keys, gene_keys):
 
 def essential(cell_keys, gene_keys):
     """generate essential.txt file for psl"""
-    
-    def average_duplicate_solutions(df):
-        """for Achilles essentiality result with multiple ATARIS solutions
-           for one gene, replace all solution rows  with average solutions"""
-        genes = list(df.Description)
-        dup_genes = set([gene for gene in genes if genes.count(gene)>1])
-        for dup_gene in dup_genes:
-            dup_rows_mean = df[df.Description==dup_gene].copy().mean()
-            dup_rows_mean["Name"] = dup_gene + "_mean"
-            dup_rows_mean["Description"] = dup_gene
-            df = df[df.Description != dup_gene]
-            df = df.append(dup_rows_mean, ignore_index=True)
-        return df
-    
-    def percentile_scaler(df):
-        """ scale gene data to percentile within a cell
-        """
-        #TODO: expriment with scaling to percentile over all and percentile over one gene
-        def take_negative(n):
-            return -n
-        df_percentile = df.copy()
-        df = df.applymap(take_negative)
-        for index, cell in enumerate(df.columns):
-            print index, len(df.columns)
-            for gene in df.index:
-                pt = stats.percentileofscore(df[cell], df[cell][gene])
-                df_percentile[cell][gene] =  pt/100
-        df_percentile.to_csv(ESSEN_PERCENT, sep="\t")
-    
     try: 
         df = pd.read_csv(ESSEN_PERCENT, delimiter="\t", index_col="Description")
     except IOError: 
@@ -127,11 +99,14 @@ def essential(cell_keys, gene_keys):
         print "creating the percentile version of the essential file, takes ~20 min"
         df = pd.read_csv(ESSEN_RAW, delimiter="\t") 
         df.dropna(inplace=True)
-        df = average_duplicate_solutions(df)
+        df = remove_duplicate_solutions(df)
+        print len(df.Description)
+        print len(set(df.Description))
         df = df.set_index("Description")
         df = df.drop("Name", axis=1)
         df = percentile_scaler(df)
-    
+        df.to_csv(ESSEN_PERCENT, sep="\t")
+
     f = open("data/first_model/essential.txt", "w")
     for cell in df.columns:
         for gene in gene_keys.keys():
@@ -140,9 +115,62 @@ def essential(cell_keys, gene_keys):
     f.close()
 
 
-def active():
-    pass
+def active(cell_keys, gene_keys):
+    df = pd.read_csv(MRNA_RAW, delimiter="\t")
+    df.dropna(inplace=True)
+    #print df.head()
+    #df = average_duplicate_solutions(df)
+    print df[df.Description=="TTL"]
+    print len(df.Description)
+    print len(set(df.Description))
+    for gene in df.Description:
+        if list(df.Description).count(gene)>1:
+            print gene 
 
+ 
+def remove_duplicate_solutions(df):
+    """for Achilles essentiality result with multiple ATARI solutions
+       remove all other solution rows except for best ATARI solution"""
     
+    def pick_best_ATARI_solution(names):
+        names = sorted(names)
+        best_name = names[0]
+        best_solution = best_name.split("_")[-1].count("1")
+        assert best_name.split("_")[1] == "1"
+        for name in names:
+            items = name.split("_")
+            if items[-1].count("1") > best_solution:
+                best_solution = items[1]
+                best_name = name
+        return best_name
+
+    genes = list(df.Description)
+    dup_genes = set([gene for gene in genes if genes.count(gene)>1])
+    for dup_gene in dup_genes:
+        dup_rows = df[df.Description==dup_gene].copy()
+        names_to_delete = list(dup_rows.Name)
+        name_to_save = pick_best_ATARI_solution(names_to_delete)
+        names_to_delete.remove(name_to_save)
+        for each_name in names_to_delete: 
+            df = df[df.Name != each_name]
+    return df
+
+
+def percentile_scaler(df):
+    """ scale gene data to percentile within a cell
+    """
+    #TODO: expriment with scaling to percentile over all and percentile over one gene
+    def take_negative(n):
+        return -n
+    df_percentile = df.copy()
+    df = df.applymap(take_negative)
+    for index, cell in enumerate(df.columns):
+        print index, len(df.columns)
+        for gene in df.index:
+            pt = stats.percentileofscore(df[cell], df[cell][gene])
+            df_percentile[cell][gene] =  pt/100
+    return df_percentile 
+
+
 if __name__=="__main__":
     main()
