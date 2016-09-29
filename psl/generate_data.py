@@ -11,11 +11,12 @@ DRUG_RESPON_RAW = "../data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 
 
 def main():
-    drug_keys = drug()
-    gene_keys = gene()
+    #drug_keys = drug()
+    #gene_keys = gene()
     #cell()
-    target(drug_keys, gene_keys)
-
+    #target(drug_keys, gene_keys)
+    essential()
+    #active()
 
 def drug():
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
@@ -44,7 +45,7 @@ def gene():
 
 
 def cell():
-    # intersection of cell lines from all data sources
+    # union of cell lines from all data sources
     df1 = pd.read_csv(ESSEN_RAW, delimiter="\t")
     cell1 = set(df1.columns)
     cell1.remove("Name")
@@ -58,7 +59,7 @@ def cell():
     df3 = pd.read_csv(DRUG_RESPON_RAW)
     cell3 = set(df3["CCLE Cell Line Name"])
 
-    cell_set = cell1.intersection(cell2).intersection(cell3)
+    cell_set = cell1.union(cell2).union(cell3)
     with open("data/first_model/cell.txt", "w") as f:
         for i, cell in enumerate(cell_set):
             f.write("C{0}\t{1}\n".format(i, cell))
@@ -78,6 +79,31 @@ def target(drug_keys, gene_keys):
         for gene in genes:
             f.write("{0}\t{1}\n".format(drug_keys[drug], gene_keys[gene]))
     f.close()
+
+
+def essential():
+    df = pd.read_csv(ESSEN_RAW, delimiter="\t") 
+    df.dropna(inplace=True)
+    df = average_duplicate_solutions(df)
+    genes = list(df.Description)
+    print len(genes)
+    print len(set(genes))
+
+
+def average_duplicate_solutions(df):
+    genes = list(df.Description)
+    dup_genes = set([gene for gene in genes if genes.count(gene)>1])
+    for dup_gene in dup_genes:
+        dup_rows_mean = df[df.Description==dup_gene].copy().mean()
+        dup_rows_mean["Name"] = dup_gene + "_mean"
+        dup_rows_mean["Description"] = dup_gene
+        df = df[df.Description != dup_gene]
+        df = df.append(dup_rows_mean, ignore_index=True)
+    return df
+
+
+def active():
+    pass
 
     
 if __name__=="__main__":
