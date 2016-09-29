@@ -14,10 +14,10 @@ DRUG_RESPON_RAW = "../data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 
 def main():
     #drug_keys = drug()
-    #gene_keys = gene()
-    #cell()
+    gene_keys = gene()
+    cell_keys = cell()
     #target(drug_keys, gene_keys)
-    essential()
+    essential(cell_keys, gene_keys)
     #active()
 
 def drug():
@@ -34,6 +34,8 @@ def drug():
 
 
 def gene():
+    """ save all drug target genes (~100 of them) to gene predicate file"""
+    # TODO instead of drug targets, expand to all ~20,000 genes 
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     gene_set = set(df[0])
     gene_keys = {}
@@ -62,10 +64,14 @@ def cell():
     cell3 = set(df3["CCLE Cell Line Name"])
 
     cell_set = cell1.union(cell2).union(cell3)
+    cell_keys = {}
     with open("data/first_model/cell.txt", "w") as f:
         for i, cell in enumerate(cell_set):
-            f.write("C{0}\t{1}\n".format(i, cell))
+            key = "C" + str(i)
+            cell_keys[cell] = key
+            f.write("{0}\t{1}\n".format(key, cell))
         f.close()
+    return cell_keys
 
 
 def target(drug_keys, gene_keys):
@@ -83,7 +89,7 @@ def target(drug_keys, gene_keys):
     f.close()
 
 
-def essential():
+def essential(cell_keys, gene_keys):
     """generate essential.txt file for psl"""
     
     def average_duplicate_solutions(df):
@@ -101,8 +107,8 @@ def essential():
     
     def percentile_scaler(df):
         """ scale gene data to percentile within a cell
-            TODO: expriment with scaling to percentile over all and percentile over one gene
         """
+        #TODO: expriment with scaling to percentile over all and percentile over one gene
         def take_negative(n):
             return -n
         df_percentile = df.copy()
@@ -126,12 +132,12 @@ def essential():
         df = df.drop("Name", axis=1)
         df = percentile_scaler(df)
     
-    print df.head()
-    print df.shape
-
-
-
-
+    f = open("data/first_model/essential.txt", "w")
+    for cell in df.columns:
+        for gene in gene_keys.keys():
+            if gene in df.index:
+                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
+    f.close()
 
 
 def active():
