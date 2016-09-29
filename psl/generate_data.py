@@ -2,10 +2,12 @@
 
 import pandas as pd
 import numpy as np
+from scipy import stats
 from pprint import pprint as pp
 
 DRUG_TARGET_RAW = "../data/combined_annotations_CCLEmapped.tab"
 ESSEN_RAW = "../data/Achilles_QC_v2.4.3.rnai.Gs.gct"
+ESSEN_PERCENT = "../data/Achilles_QC_v2.4.3.rnai.Gs.percent.txt"
 MRNA_RAW = "../data/CCLE_Expression_Entrez_2012-09-29.gct"
 DRUG_RESPON_RAW = "../data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 
@@ -82,24 +84,54 @@ def target(drug_keys, gene_keys):
 
 
 def essential():
-    df = pd.read_csv(ESSEN_RAW, delimiter="\t") 
-    df.dropna(inplace=True)
-    df = average_duplicate_solutions(df)
-    genes = list(df.Description)
-    print len(genes)
-    print len(set(genes))
+    """generate essential.txt file for psl"""
+    
+    def average_duplicate_solutions(df):
+        """for Achilles essentiality result with multiple ATARIS solutions
+           for one gene, replace all solution rows  with average solutions"""
+        genes = list(df.Description)
+        dup_genes = set([gene for gene in genes if genes.count(gene)>1])
+        for dup_gene in dup_genes:
+            dup_rows_mean = df[df.Description==dup_gene].copy().mean()
+            dup_rows_mean["Name"] = dup_gene + "_mean"
+            dup_rows_mean["Description"] = dup_gene
+            df = df[df.Description != dup_gene]
+            df = df.append(dup_rows_mean, ignore_index=True)
+        return df
+    
+    def percentile_scaler(df):
+        """ scale gene data to percentile within a cell
+            TODO: expriment with scaling to percentile over all and percentile over one gene
+        """
+        def take_negative(n):
+            return -n
+        df_percentile = df.copy()
+        df = df.applymap(take_negative)
+        for index, cell in enumerate(df.columns):
+            print index, len(df.columns)
+            for gene in df.index:
+                pt = stats.percentileofscore(df[cell], df[cell][gene])
+                df_percentile[cell][gene] =  pt/100
+        df_percentile.to_csv(ESSEN_PERCENT, sep="\t")
+    
+    try: 
+        df = pd.read_csv(ESSEN_PERCENT, delimiter="\t", index_col="Description")
+    except IOError: 
+        # clean and build percentile file from scratch if it doesn't exist
+        print "creating the percentile version of the essential file, takes ~20 min"
+        df = pd.read_csv(ESSEN_RAW, delimiter="\t") 
+        df.dropna(inplace=True)
+        df = average_duplicate_solutions(df)
+        df = df.set_index("Description")
+        df = df.drop("Name", axis=1)
+        df = percentile_scaler(df)
+    
+    print df.head()
+    print df.shape
 
 
-def average_duplicate_solutions(df):
-    genes = list(df.Description)
-    dup_genes = set([gene for gene in genes if genes.count(gene)>1])
-    for dup_gene in dup_genes:
-        dup_rows_mean = df[df.Description==dup_gene].copy().mean()
-        dup_rows_mean["Name"] = dup_gene + "_mean"
-        dup_rows_mean["Description"] = dup_gene
-        df = df[df.Description != dup_gene]
-        df = df.append(dup_rows_mean, ignore_index=True)
-    return df
+
+
 
 
 def active():
