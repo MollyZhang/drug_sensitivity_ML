@@ -100,8 +100,6 @@ def essential(cell_keys, gene_keys):
         df = pd.read_csv(ESSEN_RAW, delimiter="\t") 
         df.dropna(inplace=True)
         df = remove_duplicate_solutions(df)
-        print len(df.Description)
-        print len(set(df.Description))
         df = df.set_index("Description")
         df = df.drop("Name", axis=1)
         df = percentile_scaler(df)
@@ -130,19 +128,11 @@ def active(cell_keys, gene_keys):
  
 def remove_duplicate_solutions(df):
     """for Achilles essentiality result with multiple ATARI solutions
-       remove all other solution rows except for best ATARI solution"""
-    
+       remove all other solution rows except for first solution"""
     def pick_best_ATARI_solution(names):
-        names = sorted(names)
-        best_name = names[0]
-        best_solution = best_name.split("_")[-1].count("1")
-        assert best_name.split("_")[1] == "1"
         for name in names:
-            items = name.split("_")
-            if items[-1].count("1") > best_solution:
-                best_solution = items[1]
-                best_name = name
-        return best_name
+            if name.split("_")[1] == "1":
+                return name
 
     genes = list(df.Description)
     dup_genes = set([gene for gene in genes if genes.count(gene)>1])
