@@ -127,7 +127,7 @@ def active(cell_keys, gene_keys):
 
  
 def remove_duplicate_solutions(df):
-    """for Achilles essentiality result with multiple ATARI solutions
+    """for gene essentiality and mRNA with multiple solutions
        remove all other solution rows except for first solution"""
     def pick_best_ATARI_solution(names):
         for name in names:

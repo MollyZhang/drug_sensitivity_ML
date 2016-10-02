@@ -8,3 +8,5 @@ data/*
 *result/
 *.swp
 *~
+*.pyc
+*.cache*
