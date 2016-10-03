@@ -93,6 +93,8 @@ def target(drug_keys, gene_keys):
 
 def essential(cell_keys, gene_keys):
     """generate essential.txt file for psl"""
+    def take_negative(n):
+        return -n
     try: 
         df = pd.read_csv(ESSEN_PERCENT, delimiter="\t", index_col="Description")
     except IOError: 
@@ -103,6 +105,7 @@ def essential(cell_keys, gene_keys):
         df = remove_duplicate_solutions(df)
         df = df.set_index("Description")
         df = df.drop("Name", axis=1)
+        df = df.applymap(take_negative)
         df = percentile_scaler(df)
         df.to_csv(ESSEN_PERCENT, sep="\t")
 
@@ -156,15 +159,15 @@ def percentile_scaler(df):
     """ scale gene data to percentile within a cell
     """
     #TODO: expriment with scaling to percentile over all and percentile over one gene
-    def take_negative(n):
-        return -n
     df_percentile = df.copy()
-    df = df.applymap(take_negative)
     for index, cell in enumerate(df.columns):
-        print index, len(df.columns)
+        print "converting {0}th column of all {1} columns".format(index+1, len(df.columns))
         for gene in df.index:
+            
             pt = stats.percentileofscore(df[cell], df[cell][gene])
+            print pt/100
             df_percentile[cell][gene] =  pt/100
+    print df_percentile
     return df_percentile 
 
 
