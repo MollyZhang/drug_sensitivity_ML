@@ -17,8 +17,8 @@ def main():
     gene_keys = gene()
     cell_keys = cell()
     #target(drug_keys, gene_keys)
-    essential(cell_keys, gene_keys)
-    #active(cell_keys, gene_keys)
+    #essential(cell_keys, gene_keys)
+    active(cell_keys, gene_keys)
 
 
 def drug():
@@ -121,9 +121,6 @@ def active(cell_keys, gene_keys):
     print df[df.Description=="TTL"]
     print len(df.Description)
     print len(set(df.Description))
-    for gene in df.Description:
-        if list(df.Description).count(gene)>1:
-            print gene 
 
  
 def remove_duplicate_solutions(df):
