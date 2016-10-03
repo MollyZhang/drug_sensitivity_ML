@@ -5,11 +5,12 @@ import numpy as np
 from scipy import stats
 from pprint import pprint as pp
 
-DRUG_TARGET_RAW = "../data/combined_annotations_CCLEmapped.tab"
-ESSEN_RAW = "../data/Achilles_QC_v2.4.3.rnai.Gs.gct"
-ESSEN_PERCENT = "../data/Achilles_QC_v2.4.3.rnai.Gs.percent.txt"
-MRNA_RAW = "../data/CCLE_Expression_Entrez_2012-09-29.gct"
-DRUG_RESPON_RAW = "../data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
+DRUG_TARGET_RAW = "data/combined_annotations_CCLEmapped.tab"
+ESSEN_RAW = "data/Achilles_QC_v2.4.3.rnai.Gs.gct"
+ESSEN_PERCENT = "data/Achilles_QC_v2.4.3.rnai.Gs.percent.txt"
+MRNA_RAW = "data/CCLE_Expression_Entrez_2012-09-29.gct"
+MRNA_PERCENT = "data/CCLE_Expression_Entrez_2012-09-29.percent.gct"
+DRUG_RESPON_RAW = "data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 
 
 def main():
@@ -25,7 +26,7 @@ def drug():
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     drug_set = set(df[1])
     drug_keys = {}
-    with open("data/first_model/drug.txt", "w") as f:
+    with open("psl/data/first_model/drug.txt", "w") as f:
         for i, drug in enumerate(drug_set):
             key = "D" + str(i)
             drug_keys[drug] = key
@@ -40,7 +41,7 @@ def gene():
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     gene_set = set(df[0])
     gene_keys = {}
-    with open("data/first_model/gene.txt", "w") as f:
+    with open("psl/data/first_model/gene.txt", "w") as f:
         for i, gene in enumerate(gene_set):
             key = "G" + str(i)
             gene_keys[gene] = key
@@ -66,7 +67,7 @@ def cell():
 
     cell_set = cell1.union(cell2).union(cell3)
     cell_keys = {}
-    with open("data/first_model/cell.txt", "w") as f:
+    with open("psl/data/first_model/cell.txt", "w") as f:
         for i, cell in enumerate(cell_set):
             key = "C" + str(i)
             cell_keys[cell] = key
@@ -83,7 +84,7 @@ def target(drug_keys, gene_keys):
             target[drug].append(gene)
         else:
             target[drug] = [gene]
-    f = open("data/first_model/target.txt", "w")
+    f = open("psl/data/first_model/target.txt", "w")
     for drug, genes in target.iteritems():
         for gene in genes:
             f.write("{0}\t{1}\n".format(drug_keys[drug], gene_keys[gene]))
@@ -105,7 +106,7 @@ def essential(cell_keys, gene_keys):
         df = percentile_scaler(df)
         df.to_csv(ESSEN_PERCENT, sep="\t")
 
-    f = open("data/first_model/essential.txt", "w")
+    f = open("psl/data/first_model/essential.txt", "w")
     for cell in df.columns:
         for gene in gene_keys.keys():
             if gene in df.index:
@@ -114,13 +115,21 @@ def essential(cell_keys, gene_keys):
 
 
 def active(cell_keys, gene_keys):
-    df = pd.read_csv(MRNA_RAW, delimiter="\t")
+    # TODO currently gene "TTL" has two rows and both rows are dropped, could deal better    
+    df = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
     df.dropna(inplace=True)
-    #print df.head()
-    #df = average_duplicate_solutions(df)
-    print df[df.Description=="TTL"]
-    print len(df.Description)
-    print len(set(df.Description))
+    df = df[df.Description != "TTL"]
+    df = df.set_index("Description")
+    df = df.drop("Name", axis=1)
+    df = percentile_scaler(df)
+    df.to_csv(MRNA_PERCENT, sep="\t")
+    
+    f = open("psl/data/first_model/active.txt", "w")
+    for cell in df.columns:
+        for gene in gene_keys.keys():
+            if gene in df.index:
+                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
+    f.close()
 
  
 def remove_duplicate_solutions(df):
