@@ -3,10 +3,12 @@ This repository contains scripts pertaining to apply PSL (Probablistic Soft Logi
 To read more about PSL: https://psl.umiacs.umd.edu  
 To read more about CCLE: https://portals.broadinstitute.org/ccle/home  
 
-### project structure (updated 9-22-2016)
+### project structure (updated 10-2-2016)
     psl/    maven project and java/groovy/python codes for PSL applied to drug sensitity data  
     profiling/  python or jupyter notebook script aiming at understanding/profiling of data
-    
+    evaluation/ python folder to calculate accuracies of psl result
+    generate_data.py    python code to convert raw data into psl input format   
+ 
 ### List of data files (updated 9-28-2016)
     
     ## Downloaded from project Achilles https://portals.broadinstitute.org/achilles
