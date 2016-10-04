@@ -14,12 +14,13 @@ DRUG_RESPON_RAW = "data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 
 
 def main():
-    #drug_keys = drug()
-    gene_keys = gene()
+    drug_keys = drug()
+    #gene_keys = gene()
     cell_keys = cell()
     #target(drug_keys, gene_keys)
     #essential(cell_keys, gene_keys)
-    active(cell_keys, gene_keys)
+    #active(cell_keys, gene_keys)
+    sensitive(cell_keys, drug_keys)
 
 
 def drug():
@@ -135,6 +136,26 @@ def active(cell_keys, gene_keys):
     f.close()
 
  
+def sensitive(cell_keys, drug_keys):
+    # sensitive truth value between cell line and drug pairs covered in CCLE data
+    df = pd.read_csv(DRUG_RESPON_RAW)
+    df = df[["CCLE Cell Line Name", "Compound", "ActArea"]].copy()
+    df.ActArea = percentile_scaler(pd.DataFrame(df.ActArea))
+    cells = set(df["CCLE Cell Line Name"])
+    drugs = set(df["Compound"])
+    f = open("psl/data/first_model/sensitive_truth.txt", "w")
+    for cell in cells:
+        for drug in drugs:
+            ActArea = df[(df["CCLE Cell Line Name"] == cell) & (df["Compound"] == drug)].ActArea
+            if len(ActArea) == 0:
+                continue
+            elif len(ActArea) > 1:
+                raise Exception("bad times")
+            else:
+                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], drug_keys[drug], ActArea.values[0]))
+    f.close()
+
+
 def remove_duplicate_solutions(df):
     """for gene essentiality and mRNA with multiple solutions
        remove all other solution rows except for first solution"""
@@ -156,18 +177,15 @@ def remove_duplicate_solutions(df):
 
 
 def percentile_scaler(df):
-    """ scale gene data to percentile within a cell
-    """
-    #TODO: expriment with scaling to percentile over all and percentile over one gene
+    """ scale gene data to percentile within a cell"""
+    # TODO: expriment with scaling to percentile over all and percentile over one gene
     df_percentile = df.copy()
+    df = df.applymap(float)
     for index, cell in enumerate(df.columns):
         print "converting {0}th column of all {1} columns".format(index+1, len(df.columns))
         for gene in df.index:
-            
             pt = stats.percentileofscore(df[cell], df[cell][gene])
-            print pt/100
             df_percentile[cell][gene] =  pt/100
-    print df_percentile
     return df_percentile 
 
 
