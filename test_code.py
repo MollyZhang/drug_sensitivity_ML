@@ -8,3 +8,4 @@ def test_percentile_scaler():
     df_percentile = generate_data.percentile_scaler(df)
     for idx in df.index:
         assert df_percentile["A"][idx] == (idx + 1)/10.0
+        assert type(df_percentile["A"][idx]) == np.float64 
