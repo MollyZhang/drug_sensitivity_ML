@@ -9,8 +9,9 @@ To read more about CCLE: https://portals.broadinstitute.org/ccle/home
     evaluation/ python folder to calculate accuracies of psl result
     generate_data.py    python code to convert raw data into psl input format   
  
-### List of data files (updated 9-28-2016)
+### List of data files (updated 10-06-2016)
     
+##### RAW Data
     ## Downloaded from project Achilles https://portals.broadinstitute.org/achilles
     Achilles_QC_v2.4.3.rnai.Gs.gct
     Achilles_v2.4_SampleInfo_small.txt
@@ -30,4 +31,8 @@ To read more about CCLE: https://portals.broadinstitute.org/ccle/home
     ## drug target data compiled by Verina and Kiley
     combined_annotations_CCLEmapped.tab
     
-    
+##### generated data
+    ## percentile of raw files (each value is converted to a percentile respective to its column)
+    Achilles_QC_v2.4.3.rnai.Gs.percentgct
+    CCLE_Expression_Entrez_2012-09-29.percentgct
+    CCLE_NP24.2009_Drug_data_2015.02.24.ActAreaPercentcsv
