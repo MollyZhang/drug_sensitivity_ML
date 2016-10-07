@@ -15,15 +15,16 @@ DRUG_RESPON_RAW = "data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 
 def main():
     drug_keys = drug()
-    #gene_keys = gene()
+    gene_keys = gene()
     cell_keys = cell()
-    #target(drug_keys, gene_keys)
-    #essential(cell_keys, gene_keys)
-    #active(cell_keys, gene_keys)
+    target(drug_keys, gene_keys)
+    essential(cell_keys, gene_keys)
+    active(cell_keys, gene_keys)
     sensitive(cell_keys, drug_keys)
 
 
 def drug():
+    print "generate drug.txt"
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     drug_set = set(df[1])
     drug_keys = {}
@@ -39,6 +40,7 @@ def drug():
 def gene():
     """ save all drug target genes (~100 of them) to gene predicate file"""
     # TODO instead of drug targets, expand to all ~20,000 genes 
+    print "generate gene.txt"
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     gene_set = set(df[0])
     gene_keys = {}
@@ -52,24 +54,25 @@ def gene():
 
 
 def cell():
-    # union of cell lines from all data sources
-    df1 = pd.read_csv(ESSEN_RAW, delimiter="\t")
-    cell1 = set(df1.columns)
-    cell1.remove("Name")
-    cell1.remove("Description")
-    
-    df2 = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
-    cell2 = set(df2.columns)
-    cell2.remove("Name")
-    cell2.remove("Description")
+    # cell lines from cell_drug response data
+    print "generate cell.txt"
+#     df1 = pd.read_csv(ESSEN_RAW, delimiter="\t")
+#     cell1 = set(df1.columns)
+#     cell1.remove("Name")
+#     cell1.remove("Description")
+#     
+#     df2 = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
+#     cell2 = set(df2.columns)
+#     cell2.remove("Name")
+#     cell2.remove("Description")
 
     df3 = pd.read_csv(DRUG_RESPON_RAW)
     cell3 = set(df3["CCLE Cell Line Name"])
 
-    cell_set = cell1.union(cell2).union(cell3)
+#    cell_set = cell1.union(cell2).union(cell3)
     cell_keys = {}
     with open("psl/data/first_model/cell.txt", "w") as f:
-        for i, cell in enumerate(cell_set):
+        for i, cell in enumerate(cell3):
             key = "C" + str(i)
             cell_keys[cell] = key
             f.write("{0}\t{1}\n".format(key, cell))
@@ -78,6 +81,7 @@ def cell():
 
 
 def target(drug_keys, gene_keys):
+    print "generate target.txt"
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     target = {}
     for drug, gene in zip(df[1], df[0]):
@@ -94,6 +98,7 @@ def target(drug_keys, gene_keys):
 
 def essential(cell_keys, gene_keys):
     """generate essential.txt file for psl"""
+    print "generate essential.txt"
     def take_negative(n):
         return -n
     try: 
@@ -111,7 +116,7 @@ def essential(cell_keys, gene_keys):
         df.to_csv(ESSEN_PERCENT, sep="\t")
 
     f = open("psl/data/first_model/essential.txt", "w")
-    for cell in df.columns:
+    for cell in set(df.columns).intersection(set(cell_keys.keys())):
         for gene in gene_keys.keys():
             if gene in df.index:
                 f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
@@ -120,16 +125,22 @@ def essential(cell_keys, gene_keys):
 
 def active(cell_keys, gene_keys):
     # TODO currently gene "TTL" has two rows and both rows are dropped, could deal better    
-    df = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
-    df.dropna(inplace=True)
-    df = df[df.Description != "TTL"]
-    df = df.set_index("Description")
-    df = df.drop("Name", axis=1)
-    df = percentile_scaler(df)
-    df.to_csv(MRNA_PERCENT, sep="\t")
+    print "generate active.txt"
+    try:
+        df = pd.read_csv(MRNA_PERCENT, delimiter="\t", index_col="Description")
+    except IOError:
+        # clean and build percentile file from scratch if it doesn't exist
+        print "creating the percentile version of the file, takes ~20 min"
+        df = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
+        df.dropna(inplace=True)
+        df = df[df.Description != "TTL"]
+        df = df.set_index("Description")
+        df = df.drop("Name", axis=1)
+        df = percentile_scaler(df)
+        df.to_csv(MRNA_PERCENT, sep="\t")
     
     f = open("psl/data/first_model/active.txt", "w")
-    for cell in df.columns:
+    for cell in set(df.columns).intersection(set(cell_keys.keys())):
         for gene in gene_keys.keys():
             if gene in df.index:
                 f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
@@ -138,6 +149,7 @@ def active(cell_keys, gene_keys):
  
 def sensitive(cell_keys, drug_keys):
     # sensitive truth value between cell line and drug pairs covered in CCLE data
+    print "generate sensitive.txt"
     df = pd.read_csv(DRUG_RESPON_RAW)
     df = df[["CCLE Cell Line Name", "Compound", "ActArea"]].copy()
     df.ActArea = percentile_scaler(pd.DataFrame(df.ActArea))
