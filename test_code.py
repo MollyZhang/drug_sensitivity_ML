@@ -14,8 +14,16 @@ def test_percentile_scaler():
 
 def test_cross_validation_split():
     df = pd.DataFrame(range(20), columns=["A"])
-    for fold, train_df, val_df in train_test_split.cross_validation_split(df):
-        assert set(list(train_df.A) + list(val_df.A)) == set(df.A)
+    tests = []
+    trains = []
+    for fold, train_df, test_df in train_test_split.cross_validation_split(df):
+        assert set(list(train_df.A) + list(test_df.A)) == set(df.A)
+        tests += list(test_df.A)
+        trains += list(train_df.A)
+
     assert fold == 5 # check default 5 fold cv
+    assert len(set(tests)) == len(tests)
+    for i in set(trains):
+        assert trains.count(i) == 4
 
  
