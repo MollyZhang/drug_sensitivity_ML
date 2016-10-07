@@ -11,7 +11,7 @@ ESSEN_PERCENT = "data/Achilles_QC_v2.4.3.rnai.Gs.percent.txt"
 MRNA_RAW = "data/CCLE_Expression_Entrez_2012-09-29.gct"
 MRNA_PERCENT = "data/CCLE_Expression_Entrez_2012-09-29.percent.gct"
 DRUG_RESPON_RAW = "data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
-
+DRUG_RESPON_PERCENT = "data/CCLE_NP24.2009_Drug_data_2015.02.24_ActAreaPercent.csv"
 
 def main():
     drug_keys = drug()
@@ -130,7 +130,7 @@ def active(cell_keys, gene_keys):
         df = pd.read_csv(MRNA_PERCENT, delimiter="\t", index_col="Description")
     except IOError:
         # clean and build percentile file from scratch if it doesn't exist
-        print "creating the percentile version of the file, takes ~20 min"
+        print "creating the percentile version of the file, takes ~10 hours :("
         df = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
         df.dropna(inplace=True)
         df = df[df.Description != "TTL"]
@@ -150,9 +150,15 @@ def active(cell_keys, gene_keys):
 def sensitive(cell_keys, drug_keys):
     # sensitive truth value between cell line and drug pairs covered in CCLE data
     print "generate sensitive.txt"
-    df = pd.read_csv(DRUG_RESPON_RAW)
-    df = df[["CCLE Cell Line Name", "Compound", "ActArea"]].copy()
-    df.ActArea = percentile_scaler(pd.DataFrame(df.ActArea))
+    try:
+        df = pd.read_csv(DRUG_RESPON_PERCENT, delimiter="\t")
+    except IOError:
+        print "creating the percentile version of the file, takes ~5 min"
+        df = pd.read_csv(DRUG_RESPON_RAW)
+        df = df[["CCLE Cell Line Name", "Compound", "ActArea"]].copy()
+        df.ActArea = percentile_scaler(pd.DataFrame(df.ActArea))
+        df.to_csv(DRUG_RESPON_PERCENT, sep="\t", index=False)
+
     cells = set(df["CCLE Cell Line Name"])
     drugs = set(df["Compound"])
     f = open("psl/data/first_model/sensitive_truth.txt", "w")
