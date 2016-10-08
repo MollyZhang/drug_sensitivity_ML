@@ -65,7 +65,7 @@ def test_train_split(folder, seed=0, test_percent=0.1):
     assert len(random_idx) == len(test_idx) + len(train_idx)
     assert len(df) == len(test_df) + len(train_df)
     
-    train_file = folder + "cross_val/sensitive_truth_test.txt"
+    train_file = folder + "cross_val/sensitive_truth_train.txt"
     test_file = folder + "test/sensitive_truth_test.txt"
     test_target_file = folder + "test/sensitive_truth_test_target.txt"
      
