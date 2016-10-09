@@ -20,4 +20,6 @@
     Check the checkbox next to "Groovy", click OK
 
 #### Done!
+
+#### Note: an oddity with intelliJ is that the file paths in scripts has to be absolute path for the file to be found 
     
