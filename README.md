@@ -3,15 +3,16 @@ This repository contains scripts pertaining to apply PSL (Probablistic Soft Logi
 To read more about PSL: https://psl.umiacs.umd.edu  
 To read more about CCLE: https://portals.broadinstitute.org/ccle/home  
 
-### project structure (updated 10-2-2016)
-    psl/    maven project and java/groovy/python codes for PSL applied to drug sensitity data  
+### project structure (updated 10-9-2016)
+    psl/    maven project and java/groovy/python codes for PSL applied to drug sensitity data
+    intelliJ-psl/    use intelliJ IDE to run psl groovy project files
     profiling/  python or jupyter notebook script aiming at understanding/profiling of data
     evaluation/ python folder to calculate accuracies of psl result
     generate_data.py    python code to convert raw data into psl input format   
  
 ### List of data files (updated 10-06-2016)
     
-##### RAW Data
+    ----------------------------- RAW Data ------------------------------------------------------
     ## Downloaded from project Achilles https://portals.broadinstitute.org/achilles
     Achilles_QC_v2.4.3.rnai.Gs.gct
     Achilles_v2.4_SampleInfo_small.txt
@@ -31,7 +32,7 @@ To read more about CCLE: https://portals.broadinstitute.org/ccle/home
     ## drug target data compiled by Verina and Kiley
     combined_annotations_CCLEmapped.tab
     
-##### generated data
+    ------------------------- generated data ----------------------------------------------------
     ## percentile of raw files (each value is converted to a percentile respective to its column)
     Achilles_QC_v2.4.3.rnai.Gs.percentgct
     CCLE_Expression_Entrez_2012-09-29.percentgct
