@@ -8,7 +8,8 @@ To read more about CCLE: https://portals.broadinstitute.org/ccle/home
     intelliJ-psl/    use intelliJ IDE to run psl groovy project files
     profiling/  python or jupyter notebook script aiming at understanding/profiling of data
     evaluation/ python folder to calculate accuracies of psl result
-    generate_data.py    python code to convert raw data into psl input format   
+    generate_data.py    python code to convert raw data into psl input format
+    configure_intelliJ_for_psl.md   instruction to configure psl MAVEN project with groovy support in IntelliJ IDEA 
  
 ### List of data files (updated 10-06-2016)
     
