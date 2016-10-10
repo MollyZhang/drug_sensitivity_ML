@@ -54,25 +54,25 @@ def gene():
 
 
 def cell():
-    # cell lines from cell_drug response data
+    # union of all cell lines from all data
     print "generate cell.txt"
-#     df1 = pd.read_csv(ESSEN_RAW, delimiter="\t")
-#     cell1 = set(df1.columns)
-#     cell1.remove("Name")
-#     cell1.remove("Description")
-#     
-#     df2 = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
-#     cell2 = set(df2.columns)
-#     cell2.remove("Name")
-#     cell2.remove("Description")
+    df1 = pd.read_csv(ESSEN_RAW, delimiter="\t")
+    cell1 = set(df1.columns)
+    cell1.remove("Name")
+    cell1.remove("Description")
+     
+    df2 = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
+    cell2 = set(df2.columns)
+    cell2.remove("Name")
+    cell2.remove("Description")
 
     df3 = pd.read_csv(DRUG_RESPON_RAW)
     cell3 = set(df3["CCLE Cell Line Name"])
 
-#    cell_set = cell1.union(cell2).union(cell3)
+    cell_set = cell1.union(cell2).union(cell3)
     cell_keys = {}
     with open("psl/data/first_model/cell.txt", "w") as f:
-        for i, cell in enumerate(cell3):
+        for i, cell in enumerate(cell_set):
             key = "C" + str(i)
             cell_keys[cell] = key
             f.write("{0}\t{1}\n".format(key, cell))
