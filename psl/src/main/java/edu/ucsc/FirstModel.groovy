@@ -47,7 +47,11 @@ m.add predicate: "Essential",        types: [ArgumentType.UniqueID, ArgumentType
 m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Sensitive",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 
+// workaround for IllegalArgumentException
+//m.add predicate: "PredictSensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 ///////////////////////////// rules ////////////////////////////////////
+//m.add rule : ( PredictSensitive(C, D) & Target(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
+//m.add rule : ( PredictSensitive(C,D) & Target(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
 m.add rule : ( Target(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
 m.add rule : ( Target(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
 m.add rule: ~Sensitive(C, D), weight: 2
@@ -77,6 +81,10 @@ InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
 
 insert = data.getInserter(Active, evidencePartition);
 InserterUtils.loadDelimitedDataTruth(insert, dir+"active.txt");
+
+// workaround for IllegalArgumentException
+//insert = data.getInserter(PredictSensitive, evidencePartition);
+//InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold1_val_target.txt");
 
 
 // add target atoms
