@@ -33,12 +33,9 @@ def data_split(test_percent=0.1, cv_fold=5, seed=0):
     
     df = pd.read_csv(train_file, delimiter="\t", header=None,
                      names=["cell", "drug", "sensitivity_probability"])
-    for fold, train_df, val_df in cross_validation_split(df, cv_fold=cv_fold, seed=seed):
-        train_df.to_csv(cv_folder + "fold{0}_train.txt".format(fold), index=False, sep="\t", header=None)
-        val_df.to_csv(cv_folder + "fold{0}_val_truth.txt".format(fold),
-                      index=False, sep="\t", header=None)
-        val_df[["cell", "drug"]].to_csv(cv_folder + "fold{0}_val_target.txt".format(fold),
-                                        index=False, sep="\t", header=None)
+    for fold, tr_df, val_df in cross_validation_split(df, cv_fold=cv_fold, seed=seed):
+        tr_df.to_csv(cv_folder + "fold{0}_train.txt".format(fold), index=False, sep="\t", header=None)
+        val_df.to_csv(cv_folder + "fold{0}_val.txt".format(fold), index=False, sep="\t", header=None)
 
 
 def cross_validation_split(df, cv_fold=5, seed=0):
@@ -66,12 +63,9 @@ def test_train_split(folder, seed=0, test_percent=0.1):
     assert len(df) == len(test_df) + len(train_df)
     
     train_file = folder + "cross_val/sensitive_truth_train.txt"
-    test_file = folder + "test/sensitive_truth_test.txt"
-    test_target_file = folder + "test/sensitive_truth_test_target.txt"
-     
+    test_file = folder + "test/sensitive_truth_test.txt"  
     train_df.to_csv(train_file, sep="\t", index=False, header=None)    
     test_df.to_csv(test_file, sep="\t", index=False, header=None)
-    test_df[["cell", "drug"]].to_csv(test_target_file, sep="\t", index=False, header=None)
     
     return train_file
 
