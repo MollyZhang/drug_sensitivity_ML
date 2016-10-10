@@ -74,7 +74,7 @@ insert = data.getInserter(Cell, evidencePartition);
 InserterUtils.loadDelimitedData(insert, dir+"cell.txt");
 
 insert = data.getInserter(DrugTarget, evidencePartition);
-InserterUtils.loadDelimitedData(insert, dir+"target.txt");
+InserterUtils.loadDelimitedData(insert, dir+"drug_target.txt");
 
 insert = data.getInserter(Essential, evidencePartition);
 InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
@@ -90,7 +90,7 @@ InserterUtils.loadDelimitedDataTruth(insert, dir+"active.txt");
 // add target atoms
 def targetPartition = new Partition(1);
 insert = data.getInserter(Sensitive, targetPartition);
-InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold1_val_target.txt");
+InserterUtils.loadDelimitedData(insert, dir + "sensitive_target.txt");
 
 
 Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, DrugTarget, Essential, Active] as Set, evidencePartition);
