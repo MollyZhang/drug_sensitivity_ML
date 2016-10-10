@@ -17,7 +17,7 @@ def main():
     drug_keys = drug()
     gene_keys = gene()
     cell_keys = cell()
-    target(drug_keys, gene_keys)
+    drug_target(drug_keys, gene_keys)
     essential(cell_keys, gene_keys)
     active(cell_keys, gene_keys)
     sensitive(cell_keys, drug_keys)
@@ -80,17 +80,17 @@ def cell():
     return cell_keys
 
 
-def target(drug_keys, gene_keys):
-    print "generate target.txt"
+def drug_target(drug_keys, gene_keys):
+    print "generate drug_target.txt"
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
-    target = {}
+    drug_target = {}
     for drug, gene in zip(df[1], df[0]):
-        if drug in target.keys():
-            target[drug].append(gene)
+        if drug in drug_target.keys():
+            drug_target[drug].append(gene)
         else:
-            target[drug] = [gene]
-    f = open("psl/data/first_model/target.txt", "w")
-    for drug, genes in target.iteritems():
+            drug_target[drug] = [gene]
+    f = open("psl/data/first_model/drug_target.txt", "w")
+    for drug, genes in drug_target.iteritems():
         for gene in genes:
             f.write("{0}\t{1}\n".format(drug_keys[drug], gene_keys[gene]))
     f.close()
