@@ -1,4 +1,4 @@
-"""this script generates converts raw data to data suitable as psl input """
+""" this script generates converts raw data to data suitable as psl input """
 
 import pandas as pd
 import numpy as np
@@ -149,6 +149,7 @@ def active(cell_keys, gene_keys):
  
 def sensitive(cell_keys, drug_keys):
     # sensitive truth value between cell line and drug pairs covered in CCLE data
+    # as well as sensitive target which is a exhaustive list of all cell-drug pairs
     print "generate sensitive.txt"
     try:
         df = pd.read_csv(DRUG_RESPON_PERCENT, delimiter="\t")
@@ -161,7 +162,7 @@ def sensitive(cell_keys, drug_keys):
 
     cells = set(df["CCLE Cell Line Name"])
     drugs = set(df["Compound"])
-    f = open("psl/data/first_model/sensitive_truth.txt", "w")
+    f_truth = open("psl/data/first_model/sensitive_truth.txt", "w")
     for cell in cells:
         for drug in drugs:
             ActArea = df[(df["CCLE Cell Line Name"] == cell) & (df["Compound"] == drug)].ActArea
@@ -170,8 +171,15 @@ def sensitive(cell_keys, drug_keys):
             elif len(ActArea) > 1:
                 raise Exception("bad times")
             else:
-                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], drug_keys[drug], ActArea.values[0]))
-    f.close()
+                f_truth.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], 
+                                                       drug_keys[drug], ActArea.values[0]))
+    f_truth.close()
+
+    f_target = open("psl/data/first_model/sensitive_target.txt", "w")
+    for cell in cell_keys.values():
+        for drug in drug_keys.values():
+            f_target.write("{0}\t{1}\n".format(cell, drug))
+    f_target.close()
 
 
 def remove_duplicate_solutions(df):
