@@ -35,19 +35,19 @@ def calculate_accuracy(truth_df, infer_df):
     df = pd.merge(truth_df, infer_df, on="cell_drug_pair", suffixes=["_truth", "_infer"]) 
     mse = sklearn.metrics.mean_squared_error(df.y_truth, df.y_infer)
     accuracy, auc = binary_result(df)
-
     return mse, accuracy, auc
 
 
 def binary_result(df):
     """ take >75% as label 1 and <25% as label 0, return accuracy"""
-    df.y_truth[df.y_truth >= 0.75] = 1 
-    df.y_truth[df.y_truth <= 0.25] = 0
-    binary_df = df[(df.y_truth == 1) | (df.y_truth==0)].copy()
-    binary_df.y_infer[df.y_infer >= 0.5] = 1 
-    binary_df.y_infer[df.y_infer < 0.5] = 0
-    accuracy = sklearn.metrics.accuracy_score(binary_df.y_truth, binary_df.y_infer)
-    auc = sklearn.metrics.roc_auc_score(binary_df.y_truth, binary_df.y_infer)
+
+    df.loc[df.y_truth >= 0.75, "y_"] = 1 
+    df.loc[df.y_truth <= 0.25, "y_"] = 0 
+    binary_df = df.dropna().copy()
+    binary_df.loc[binary_df.y_infer >= 0.5, "y"] = 1 
+    binary_df.loc[binary_df.y_infer < 0.5, "y"] = 0
+    accuracy = sklearn.metrics.accuracy_score(binary_df.y_, binary_df.y)
+    auc = sklearn.metrics.roc_auc_score(binary_df.y_, binary_df.y)
     return accuracy, auc 
 
 
