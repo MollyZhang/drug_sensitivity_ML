@@ -47,15 +47,13 @@ m.add predicate: "Essential",        types: [ArgumentType.UniqueID, ArgumentType
 m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Sensitive",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 
-// workaround for IllegalArgumentException
-//m.add predicate: "PredictSensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 ///////////////////////////// rules ////////////////////////////////////
-//m.add rule : ( PredictSensitive(C, D) & Target(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
-//m.add rule : ( PredictSensitive(C,D) & Target(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
 m.add rule : ( DrugTarget(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
 m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
 m.add rule: ~Sensitive(C, D), weight: 2
 
+println ""
+println "Rules with initial weights:"
 println m;
 
 //////////////////////////// data setup ///////////////////////////
@@ -82,34 +80,13 @@ InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
 insert = data.getInserter(Active, evidencePartition);
 InserterUtils.loadDelimitedDataTruth(insert, dir+"active.txt");
 
-// workaround for IllegalArgumentException
-//insert = data.getInserter(PredictSensitive, evidencePartition);
-//InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold1_val_target.txt");
-
 
 // add target atoms
 def targetPartition = new Partition(1);
 insert = data.getInserter(Sensitive, targetPartition);
 InserterUtils.loadDelimitedData(insert, dir + "sensitive_target.txt");
 
-
 Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, DrugTarget, Essential, Active] as Set, evidencePartition);
-
-//////////////////////////// run inference ///////////////////////////
-MPEInference inferenceApp = new MPEInference(m, db, config);
-inferenceApp.mpeInference();
-inferenceApp.close();
-
-println "Inference results with hand-defined weights:"
-DecimalFormat formatter = new DecimalFormat("#.###");
-def result_file = new File("result/first_model_inference_result.txt");
-result_file.write ""
-for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
-    println atom.toString() + "\t" + formatter.format(atom.getValue());
-    for (int i=0; i<2; i++) {
-        result_file << atom.arguments[i].toString() + "\t"
-    }
-    result_file << formatter.format(atom.getValue()) + "\n"}
 
 //////////////////////////// weight learning ///////////////////////////
 Partition trueDataPartition = new Partition(2);
@@ -124,6 +101,22 @@ weightLearning.close();
 println ""
 println "Learned model:"
 println m
+
+//////////////////////////// run inference ///////////////////////////
+MPEInference inferenceApp = new MPEInference(m, db, config);
+inferenceApp.mpeInference();
+inferenceApp.close();
+
+println "Inference results with hand-defined weights:"
+DecimalFormat formatter = new DecimalFormat("#.###");
+def result_file = new File("result/first_model_cross_val_fold1_result.txt");
+result_file.write ""
+for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
+    println atom.toString() + "\t" + formatter.format(atom.getValue());
+    for (int i=0; i<2; i++) {
+        result_file << atom.arguments[i].toString() + "\t"
+    }
+    result_file << formatter.format(atom.getValue()) + "\n"}
 
 // close the Databases to flush writes
 db.close();
