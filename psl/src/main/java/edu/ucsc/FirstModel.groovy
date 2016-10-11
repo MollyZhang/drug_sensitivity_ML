@@ -107,12 +107,11 @@ MPEInference inferenceApp = new MPEInference(m, db, config);
 inferenceApp.mpeInference();
 inferenceApp.close();
 
-println "Inference results with hand-defined weights:"
-DecimalFormat formatter = new DecimalFormat("#.###");
+println "saving inference results to result/"
+DecimalFormat formatter = new DecimalFormat("#.#######");
 def result_file = new File("result/first_model_cross_val_fold1_result.txt");
 result_file.write ""
 for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
-    println atom.toString() + "\t" + formatter.format(atom.getValue());
     for (int i=0; i<2; i++) {
         result_file << atom.arguments[i].toString() + "\t"
     }
