@@ -29,6 +29,12 @@ import edu.umd.cs.psl.ui.functions.textsimilarity.*
 import edu.umd.cs.psl.ui.loading.InserterUtils;
 import edu.umd.cs.psl.util.database.Queries;
 
+
+
+nfold = this.args[0] as int
+for (i=1; i<= nfold; i++) {
+println "fold ${i}"
+
 ////////////////////////// initial setup ////////////////////////
 ConfigManager cm = ConfigManager.getManager()
 ConfigBundle config = cm.getBundle("first-model")
@@ -91,7 +97,7 @@ Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, DrugTarget, E
 //////////////////////////// weight learning ///////////////////////////
 Partition trueDataPartition = new Partition(2);
 insert = data.getInserter(Sensitive, trueDataPartition)
-InserterUtils.loadDelimitedDataTruth(insert, dir+target_dir+"fold1_train.txt");
+InserterUtils.loadDelimitedDataTruth(insert, dir+target_dir+"fold${i}_train.txt");
 
 Database trueDataDB = data.getDatabase(trueDataPartition, [Sensitive] as Set);
 MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(m, db, trueDataDB, config);
@@ -109,7 +115,7 @@ inferenceApp.close();
 
 println "saving inference results to result/"
 DecimalFormat formatter = new DecimalFormat("#.#######");
-def result_file = new File("result/first_model_cross_val_fold1_result.txt");
+def result_file = new File("result/first_model_cross_val_fold${i}_result.txt");
 result_file.write ""
 for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
     for (int i=0; i<2; i++) {
@@ -120,3 +126,4 @@ for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
 // close the Databases to flush writes
 db.close();
 trueDataDB.close();
+}
