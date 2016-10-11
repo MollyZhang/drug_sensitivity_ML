@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
+
 
 import compare_y
 
@@ -20,11 +22,16 @@ def main():
                      #"train_accuracy": tr_accuracy, "test_accuracy": test_accuracy, 
                      #"train_auc_score": tr_auc, "test_auc_score": test_auc})
     df = pd.DataFrame(rows)
-    print df
-    print df.mean()
-    print df.std() 
+    plotting(df)
 
 
+def plotting(df):
+    mean = df.mean()
+    std = df.std()
+    print mean
+    print std
+    mean.plot.bar(yerr=std)
+    plt.show()
 
 if __name__=="__main__":
     main()
