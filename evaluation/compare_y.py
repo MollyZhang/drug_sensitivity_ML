@@ -32,7 +32,7 @@ def load_data(train_file, test_file, infer_file):
 
 def calculate_accuracy(truth_df, infer_df):
     infer_df = infer_df.loc[infer_df.cell_drug_pair.isin(truth_df.cell_drug_pair)].copy()
-    df = pd.merge(infer_df, truth_df, on="cell_drug_pair", suffixes=["_infer", "_truth"]) 
+    df = pd.merge(truth_df, infer_df, on="cell_drug_pair", suffixes=["_truth", "_infer"]) 
     mse = sklearn.metrics.mean_squared_error(df.y_truth, df.y_infer)
     accuracy, auc = binary_result(df)
 
