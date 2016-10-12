@@ -39,15 +39,17 @@ def main():
 
 
 
-
-
 def plotting(df):
     mean = df.mean()
     std = df.std()
     nice_mean = prettifying_df_for_bar_plot(mean)
     nice_std = prettifying_df_for_bar_plot(std)
-    nice_mean.plot.bar(yerr=nice_std, rot=30, alpha=0.75)
-    plt.ylabel("Mean Squared Error")
+    ax = nice_mean.plot.bar(yerr=nice_std, rot=30, alpha=0.75)
+    ax.set_ylabel("Mean Squared Error")
+    for rect in ax.patches:
+        height = rect.get_height()
+        height_label = "%.3f" % height
+        ax.text(rect.get_x() + rect.get_width()/2, height + 0.01, height_label)
     plt.show()
 
 
@@ -58,7 +60,6 @@ def prettifying_df_for_bar_plot(df):
         exp_type = name.split("_")[0]
         rest = "_".join(name.split("_")[1:])
         nice_df.loc[rest][exp_type] = df[name]
-
     return nice_df 
     
 
