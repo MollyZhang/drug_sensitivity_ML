@@ -1,6 +1,6 @@
 //    implement toy cell line sensitity to drug exaxmple
 
-package edu.ucsc.cancer
+package edu.ucsc
 
 import java.text.DecimalFormat;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -42,14 +42,14 @@ PSLModel m = new PSLModel(this, data)
 m.add predicate: "Drug",       types: [ArgumentType.UniqueID, ArgumentType.String]
 m.add predicate: "Gene",       types: [ArgumentType.UniqueID, ArgumentType.String]
 m.add predicate: "Cell",     types: [ArgumentType.UniqueID, ArgumentType.String]
-m.add predicate: "Targets",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+m.add predicate: "DrugTarget",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Essential",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 m.add predicate: "Sensitive",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
 
 ///////////////////////////// rules ////////////////////////////////////
-m.add rule : ( Targets(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
-m.add rule : ( Targets(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
+m.add rule : ( DrugTarget(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
+m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
 m.add rule: ~Sensitive(C, D), weight: 2
 
 println m;
@@ -68,8 +68,8 @@ InserterUtils.loadDelimitedData(insert, dir+"gene.txt");
 insert = data.getInserter(Cell, evidencePartition);
 InserterUtils.loadDelimitedData(insert, dir+"cell.txt");
 
-insert = data.getInserter(Targets, evidencePartition);
-InserterUtils.loadDelimitedData(insert, dir+"targets.txt");
+insert = data.getInserter(DrugTarget, evidencePartition);
+InserterUtils.loadDelimitedData(insert, dir+"drug_target.txt");
 
 insert = data.getInserter(Essential, evidencePartition);
 InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
@@ -83,8 +83,7 @@ def targetPartition = new Partition(1);
 insert = data.getInserter(Sensitive, targetPartition);
 InserterUtils.loadDelimitedData(insert, dir+"sensitive_target.txt");
 
-
-Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, Targets, Essential, Active] as Set, evidencePartition);
+Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, DrugTarget, Essential, Active] as Set, evidencePartition);
 
 //////////////////////////// run inference ///////////////////////////
 MPEInference inferenceApp = new MPEInference(m, db, config);
@@ -101,6 +100,7 @@ for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
         result_file << atom.arguments[i].toString() + "\t"
     }
     result_file << formatter.format(atom.getValue()) + "\n"}
+
 
 //////////////////////////// weight learning ///////////////////////////
 Partition trueDataPartition = new Partition(2);
