@@ -8,8 +8,9 @@ from matplotlib import pyplot as plt
 
 
 def main():
-    weight_df = parse_weight("../psl/result/first_model_cross_val_fold1_log.txt")
-    plotting(weight_df)
+    weight_df = parse_weight("../psl/result/log/first_model_cross_val_fold1_log.txt")
+    weight_df.to_csv("../psl/result/log/first_model_cross_val_fold1_log_weights.txt", index=False, sep="\t") 
+
 
 def parse_weight(log_file):
     rule_text = {"} ( DRUGTARGET(D, G) & ESSENTIAL(C, G) ) >> SENSITIVE(C, D)": "essential_rule",
@@ -25,6 +26,7 @@ def parse_weight(log_file):
         weights[rule] = [float(line.split(rule_text)[0].split("{")[-1])
                          for line in all_lines
                          if (rule_text in line and "kernel" in line)]
+        weights[rule].pop(0) 
     return pd.DataFrame(weights)
 
 

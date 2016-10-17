@@ -1,3 +1,4 @@
+*.properties
 data/*
 *.idea*
 */.ipynb_checkpoints/*
