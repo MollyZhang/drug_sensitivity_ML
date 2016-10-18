@@ -9,25 +9,24 @@ def main():
     test_file = "../psl/data/first_model/seed0/cross_val/5fold/fold1_val.txt"
     infer_file = "../psl/result/first_model_cross_val_fold1_result.txt"
 
-    tr_df, val_df, infer_df = load_data(train_file, test_file, infer_file)
+    tr_df = load_data(train_file)
+    val_df = load_data(test_file)
+    infer_df = load_data(infer_file)
     print calculate_accuracy(tr_df, infer_df)
     print calculate_accuracy(val_df, infer_df)
 
 
-def load_data(train_file, test_file, infer_file):
-    dataframes = []
-    for each_file in [train_file, test_file, infer_file]:
-        rows = []
-        with open(each_file, "r") as f:
-            for line in f:
-                items = line.strip("\n").split("\t")
-                cell_drug_pair = items[0] + items[1]
-                value = float(items[-1])
-                rows.append({"cell_drug_pair": cell_drug_pair, "y": value})
-        f.close()
-        df = pd.DataFrame(rows)
-        dataframes.append(df)
-    return dataframes
+def load_data(file_name):
+    rows = []
+    with open(file_name, "r") as f:
+        for line in f:
+            items = line.strip("\n").split("\t")
+            cell_drug_pair = items[0] + items[1]
+            value = float(items[-1])
+            rows.append({"cell_drug_pair": cell_drug_pair, "y": value})
+    f.close()
+    df = pd.DataFrame(rows)
+    return df
 
 
 def calculate_accuracy(truth_df, infer_df):
