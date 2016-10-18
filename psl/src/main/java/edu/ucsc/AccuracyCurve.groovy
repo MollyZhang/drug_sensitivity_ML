@@ -106,6 +106,5 @@ weight_list.eachWithIndex { weights, index ->
         }
         result_file << formatter.format(atom.getValue()) + "\n"}
     
-    // close db
     db.close();
 }
