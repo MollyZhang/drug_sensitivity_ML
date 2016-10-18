@@ -9,14 +9,14 @@ TRUTH_FILE = "../psl/data/first_model/seed0/cross_val/5fold/fold1_train.txt"
 
 
 def main():
-    df = parse_weight("../psl/result/log/first_model_cross_val_fold1_log.txt")
-    df['mse'] = get_accuracy_curve("../psl/result/log/weight_curve")
+    df = parse_weight("../psl/result/log/first_model_cross_val_fold1_log_stepsize5.txt")
+    df['mse'] = get_accuracy_curve("../psl/result/log/weight_curve2")
     plotting(df)
 
 
 def get_accuracy_curve(folder):
     truth_df = compare_y.load_data(TRUTH_FILE)
-    accu = [] 
+    accu = []
     for i in range(101):
         infer_df = compare_y.load_data("{0}/{1}.txt".format(folder, i)) 
         mse, _, _ = compare_y.calculate_accuracy(truth_df, infer_df)
@@ -40,8 +40,8 @@ def parse_weight(log_file):
                          if (rule_text in line and "kernel" in line)]
         weights[rule].pop(0) 
     df = pd.DataFrame(weights)
-    df.to_csv("../psl/result/log/first_model_cross_val_fold1_log_weights.txt", 
-              index=False, hearder=None, sep="\t") 
+    df.to_csv(log_file + ".parsed_weights", 
+              index=False, header=None, sep="\t") 
     return df
 
 
