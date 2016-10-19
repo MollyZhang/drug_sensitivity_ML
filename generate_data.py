@@ -14,13 +14,36 @@ DRUG_RESPON_RAW = "data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 DRUG_RESPON_PERCENT = "data/CCLE_NP24.2009_Drug_data_2015.02.24_ActAreaPercent.csv"
 
 def main():
-    drug_keys = drug()
-    gene_keys = gene()
+    #drug_keys = drug()
+    #gene_keys = gene()
     cell_keys = cell()
-    drug_target(drug_keys, gene_keys)
-    essential(cell_keys, gene_keys)
-    active(cell_keys, gene_keys)
-    sensitive(cell_keys, drug_keys)
+    #drug_target(drug_keys, gene_keys)
+    #essential(cell_keys, gene_keys)
+    #active(cell_keys, gene_keys)
+    #sensitive(cell_keys, drug_keys)
+    tissue_keys = tissue(cell_keys)
+    
+
+def tissue(cell_keys):
+    print "generate tissue.txt"
+    tissues = []
+    for name, key in cell_keys.iteritems():
+        tissue = "_".join(name.split("_")[1:])
+        if tissue == "": # some cell lines doesn't have a tissue name
+            continue 
+        elif tissue == "LUNG.1":
+            tissue = tissue[:-2]
+        tissues.append(tissue)
+    tissues = sorted(list(set(tissues)))
+    tissue_keys = {}
+    with open("psl/data/first_model/tissue.txt", "w") as f:
+        for i, tissue in enumerate(tissues):
+            key = "T" + str(i)
+            tissue_keys[tissue] = key
+            f.write("{0}\t{1}\n".format(key, tissue))
+        f.close()
+    return tissue_keys
+
 
 
 def drug():
