@@ -30,18 +30,19 @@ def parse_weight(log_file):
                  "} ~( SENSITIVE(C, D) )": "sensitive_prior"}
     weights = {"active_rule": [], "essential_rule": [], "sensitive_prior": []}
     
-    f = open(log_file, "r")
-    all_lines = f.readlines()
-    f.close()
-    
+    if len(log_file) < 500:
+        f = open(log_file, "r")
+        all_lines = f.readlines()
+        f.close()
+    else:
+        all_lines = log_file.split("\n")    
+
     for rule_text, rule in rule_text.iteritems():
         weights[rule] = [float(line.split(rule_text)[0].split("{")[-1])
                          for line in all_lines
-                         if (rule_text in line and "kernel" in line)]
+                         if (rule_text in line)]
         weights[rule].pop(0) 
     df = pd.DataFrame(weights)
-    df.to_csv(log_file + ".parsed_weights", 
-              index=False, header=None, sep="\t") 
     return df
 
 
