@@ -46,10 +46,14 @@ def parse_weight(log_file):
     return df
 
 
-def plotting(df):
-    df.plot(subplots=True, figsize=(8, 8));
-    plt.xlabel("number of iterations") 
-    plt.show()
+def plotting(df, title="", save_to=False):
+    df.plot(subplots=True, figsize=(8, 10), title=title);
+    plt.xlabel("number of iterations")
+    plt.xticks(rotation=0)
+    if save_to:
+        plt.savefig(save_to)
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
