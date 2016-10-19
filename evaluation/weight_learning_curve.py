@@ -14,10 +14,10 @@ def main():
     plotting(df)
 
 
-def get_accuracy_curve(folder):
+def get_accuracy_curve(folder, iteration):
     truth_df = compare_y.load_data(TRUTH_FILE)
     accu = []
-    for i in range(101):
+    for i in range(iteration + 1):
         infer_df = compare_y.load_data("{0}/{1}.txt".format(folder, i)) 
         mse, _, _ = compare_y.calculate_accuracy(truth_df, infer_df)
         accu.append(mse)
