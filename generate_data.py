@@ -22,7 +22,8 @@ def main():
     #active(cell_keys, gene_keys)
     #sensitive(cell_keys, drug_keys)
     tissue_keys = tissue(cell_keys)
-    
+    is_tissue(cell_keys, tissue_keys)
+ 
 
 def tissue(cell_keys):
     print "generate tissue.txt"
@@ -43,6 +44,19 @@ def tissue(cell_keys):
             f.write("{0}\t{1}\n".format(key, tissue))
         f.close()
     return tissue_keys
+
+
+def is_tissue(cell_keys, tissue_keys):
+    print "generate is_tissue.txt"
+    f = open("psl/data/first_model/is_tissue.txt", "w")
+    for name, key in cell_keys.iteritems():
+        tissue = "_".join(name.split("_")[1:])
+        if tissue == "": # some cell lines doesn't have a tissue name
+            continue 
+        elif tissue == "LUNG.1":
+            tissue = tissue[:-2]
+        f.write("{0}\t{1}\n".format(cell_keys[name], tissue_keys[tissue]))
+    f.close()
 
 
 
