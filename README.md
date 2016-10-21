@@ -1,7 +1,9 @@
 # drug_sensitivity_ML
-This repository contains scripts pertaining to apply PSL (Probablistic Soft Logic) to cancer cell sensitivity to drugs using data from CCLE (Cancer Cell Line Encyclopedia).  
+This repository contains scripts pertaining to apply PSL (Probablistic Soft Logic) to cancer cell sensitivity to drugs using data from CCLE (Cancer Cell Line Encyclopedia) and Project Achilles.  
 To read more about PSL: https://psl.umiacs.umd.edu  
 To read more about CCLE: https://portals.broadinstitute.org/ccle/home  
+To read more about Achilles: https://portals.broadinstitute.org/achilles
+
 
 ### project structure (updated 10-9-2016)
     psl/    maven project and java/groovy/python codes for PSL applied to drug sensitity data
