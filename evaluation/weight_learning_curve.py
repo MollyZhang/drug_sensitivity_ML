@@ -5,7 +5,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 import compare_y
 
-TRUTH_FILE = "../psl/data/first_model/seed0/cross_val/5fold/fold1_train.txt"
+TRAIN_FILE = "../psl/data/first_model/seed0/cross_val/5fold/fold1_train.txt"
+TEST_FILE = "../psl/data/first_model/seed0/cross_val/5fold/fold1_val.txt"
+
 
 
 def main():
@@ -15,13 +17,17 @@ def main():
 
 
 def get_accuracy_curve(folder, iteration):
-    truth_df = compare_y.load_data(TRUTH_FILE)
-    accu = []
+    train_df = compare_y.load_data(TRAIN_FILE)
+    test_df = compare_y.load_data(TEST_FILE)
+    train_accu = []
+    test_accu = []
     for i in range(iteration + 1):
         infer_df = compare_y.load_data("{0}/{1}.txt".format(folder, i)) 
-        mse, _, _ = compare_y.calculate_accuracy(truth_df, infer_df)
-        accu.append(mse)
-    return accu
+        train_mse, _, _ = compare_y.calculate_accuracy(train_df, infer_df)
+        test_mse, _, _ = compare_y.calculate_accuracy(test_df, infer_df)
+        train_accu.append(train_mse)
+        test_accu.append(test_mse)
+    return train_accu, test_accu
 
 
 def parse_weight(log_file):
@@ -47,11 +53,20 @@ def parse_weight(log_file):
 
 
 def plotting(df, title="", save_to=False):
-    df.plot(subplots=True, figsize=(8, 10), title=title);
+    f, axarr = plt.subplots(nrows=2, ncols=1, sharex = True, squeeze=True)
+    axarr[0].plot(df.index, df.essential_rule, "g", label="essential rule")
+    axarr[0].plot(df.index, df.active_rule, "r", label="active rule")
+    axarr[0].plot(df.index, df.sensitive_prior, "b", label="sensitive prior")
+    axarr[0].set_ylabel("Rule weights")
+    axarr[0].legend(loc="best")
+    axarr[0].set_title(title)
+    axarr[1].plot(df.index, df.train_mse, "c", label="train mse")
+    axarr[1].plot(df.index, df.test_mse, "m", label = "test mse")
+    axarr[1].set_ylabel("MSE")
+    axarr[1].legend(loc="best")
     plt.xlabel("number of iterations")
-    plt.xticks(rotation=0)
     if save_to:
-        plt.savefig(save_to)
+        plt.savefig(save_to, dpi=200, bbox_inches="tight")
     else:
         plt.show()
 
