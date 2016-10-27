@@ -15,14 +15,15 @@ DRUG_RESPON_PERCENT = "data/CCLE_NP24.2009_Drug_data_2015.02.24_ActAreaPercent.c
 
 def main():
     #drug_keys = drug()
-    #gene_keys = gene()
+    gene_keys = gene()
     cell_keys = cell()
     #drug_target(drug_keys, gene_keys)
     #essential(cell_keys, gene_keys)
+    not_essential(cell_keys, gene_keys)
     #active(cell_keys, gene_keys)
     #sensitive(cell_keys, drug_keys)
-    tissue_keys = tissue(cell_keys)
-    is_tissue(cell_keys, tissue_keys)
+    #tissue_keys = tissue(cell_keys)
+    #is_tissue(cell_keys, tissue_keys)
  
 
 def tissue(cell_keys):
@@ -157,6 +158,18 @@ def essential(cell_keys, gene_keys):
         for gene in gene_keys.keys():
             if gene in df.index:
                 f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
+    f.close()
+
+
+def not_essential(cell_keys, gene_keys):
+    """generate not_essential.txt file for psl"""
+    print "generate not_essential.txt"
+    df = pd.read_csv(ESSEN_PERCENT, delimiter="\t", index_col="Description")
+    f = open("psl/data/first_model/not_essential.txt", "w")
+    for cell in set(df.columns).intersection(set(cell_keys.keys())):
+        for gene in gene_keys.keys():
+            if gene in df.index:
+                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], 1-df[cell][gene]))
     f.close()
 
 

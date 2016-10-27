@@ -1,5 +1,5 @@
 *.properties
-data/*
+raw_data/*
 *.idea*
 */.ipynb_checkpoints/*
 .ipynb_checkpoints/*
