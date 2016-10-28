@@ -49,12 +49,10 @@ for (i=1; i<= nfold; i++) {
     m.add predicate: "Cell",     types: [ArgumentType.UniqueID, ArgumentType.String]
     m.add predicate: "DrugTarget",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "Essential",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-    m.add predicate: "Active",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "Sensitive",        types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-    
+   
     ///////////////////////////// rules ////////////////////////////////////
-    m.add rule : ( DrugTarget(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
-    m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
+    m.add rule : ( DrugTarget(D, G) & Essential(C, G))  >> Sensitive(C, D),  weight : 10
     m.add rule: ~Sensitive(C, D), weight: 2
     
     println ""
@@ -80,10 +78,7 @@ for (i=1; i<= nfold; i++) {
     InserterUtils.loadDelimitedData(insert, dir+"drug_target.txt");
     
     insert = data.getInserter(Essential, evidencePartition);
-    InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
-    
-    insert = data.getInserter(Active, evidencePartition);
-    InserterUtils.loadDelimitedDataTruth(insert, dir+"active.txt");
+    InserterUtils.loadDelimitedDataTruth(insert, dir+"not_essential.txt");
     
     
     // add target atoms
@@ -115,7 +110,7 @@ for (i=1; i<= nfold; i++) {
     
     println "saving inference results to result/"
     DecimalFormat formatter = new DecimalFormat("#.#######");
-    def result_file = new File("result/first_model/cross_val_fold${i}_result.txt");
+    def result_file = new File("result/second_model/cross_val_fold${i}_result_essentialRule.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
         for (int i=0; i<2; i++) {

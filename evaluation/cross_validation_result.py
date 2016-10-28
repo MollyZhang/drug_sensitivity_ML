@@ -5,19 +5,20 @@ from matplotlib import pyplot as plt
 
 import compare_y
 
+MODEL = "second"
 
 
 def main():
     train_file = "../psl/data/first_model/seed0/cross_val/5fold/fold{0}_train.txt"
     test_file = "../psl/data/first_model/seed0/cross_val/5fold/fold{0}_val.txt"
-    infer_file = "../psl/result/second_model/second_model_cross_val_fold{0}_result{1}.txt" 
+    infer_file = "../psl/result/{0}_model/{0}_model_cross_val_fold{1}_result{2}.txt" 
     rows = []
     for fold in range(1, 6):
         tr_df = compare_y.load_data(train_file.format(fold))
         val_df = compare_y.load_data(test_file.format(fold))
-        infer_df = compare_y.load_data(infer_file.format(fold, ""))
-        infer_df_active = compare_y.load_data(infer_file.format(fold, "_activeRule"))
-        infer_df_essen = compare_y.load_data(infer_file.format(fold, "_essentialRule"))
+        infer_df = compare_y.load_data(infer_file.format(MODEL, fold, ""))
+        infer_df_active = compare_y.load_data(infer_file.format(MODEL, fold, "_activeRule"))
+        infer_df_essen = compare_y.load_data(infer_file.format(MODEL, fold, "_essentialRule"))
         
         tr_both_rules, _, _ = compare_y.calculate_accuracy(tr_df, infer_df)
         test_both_rules, _, _ = compare_y.calculate_accuracy(val_df, infer_df)
