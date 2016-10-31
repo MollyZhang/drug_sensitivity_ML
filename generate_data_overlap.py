@@ -13,8 +13,8 @@ WRITE_DIR = "psl/data/overlap_cell_gene/"
 
 def main():
     gene_keys = gene()
+    cell_keys = cell()
     #drug_keys = drug()
-    #cell_keys = cell()
     #drug_target(drug_keys, gene_keys)
     #essential(cell_keys, gene_keys)
     #not_essential(cell_keys, gene_keys)
@@ -38,29 +38,17 @@ def gene():
 
 
 def cell():
-    # union of all cell lines from all data
+    # intersection of cell lines from all data
     print "generate cell.txt"
-    df1 = pd.read_csv(ESSEN_RAW, delimiter="\t")
-    cell1 = set(df1.columns)
-    cell1.remove("Name")
-    cell1.remove("Description")
-     
-    df2 = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
-    cell2 = set(df2.columns)
-    cell2.remove("Name")
-    cell2.remove("Description")
-
-    df3 = pd.read_csv(DRUG_RESPON_RAW)
-    cell3 = set(df3["CCLE Cell Line Name"])
-
-    cell_set = cell1.union(cell2).union(cell3)
-    cell_keys = {}
-    with open("psl/data/first_model/cell.txt", "w") as f:
-        for i, cell in enumerate(cell_set):
-            key = "C" + str(i)
-            cell_keys[cell] = key
-            f.write("{0}\t{1}\n".format(key, cell))
-        f.close()
+    drug_df = pd.read_csv(PSL_DATA_DIR + "sensitive_truth.txt", delimiter="\t", header=None)
+    active_df = pd.read_csv(PSL_DATA_DIR + "active.txt", delimiter="\t", header=None)
+    essential_df = pd.read_csv(PSL_DATA_DIR + "essential.txt", delimiter="\t", header=None)
+    
+    cell_set = set(active_df[0]).intersection(set(drug_df[0])).intersection(set(essential_df[0]))
+    cell_df = pd.read_csv(PSL_DATA_DIR + "cell.txt", delimiter="\t", header=None)
+    overlap_cell_df = cell_df[cell_df[0].isin(cell_set)].copy()
+    overlap_cell_df.to_csv(WRITE_DIR + "cell.txt", sep="\t", header=None, index=False)
+    cell_keys = dict(zip(overlap_cell_df[0], overlap_cell_df[1]))
     return cell_keys
 
 
