@@ -5,21 +5,21 @@ import numpy as np
 from scipy import stats
 from pprint import pprint as pp
 
-DRUG_TARGET_RAW = "data/combined_annotations_CCLEmapped.tab"
-ESSEN_RAW = "data/Achilles_QC_v2.4.3.rnai.Gs.gct"
-ESSEN_PERCENT = "data/Achilles_QC_v2.4.3.rnai.Gs.percent.txt"
-MRNA_RAW = "data/CCLE_Expression_Entrez_2012-09-29.gct"
-MRNA_PERCENT = "data/CCLE_Expression_Entrez_2012-09-29.percent.gct"
-DRUG_RESPON_RAW = "data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
-DRUG_RESPON_PERCENT = "data/CCLE_NP24.2009_Drug_data_2015.02.24_ActAreaPercent.csv"
+DRUG_TARGET_RAW = "raw_data/combined_annotations_CCLEmapped.tab"
+ESSEN_RAW = "raw_data/Achilles_QC_v2.4.3.rnai.Gs.gct"
+ESSEN_PERCENT = "raw_data/Achilles_QC_v2.4.3.rnai.Gs.percent.txt"
+MRNA_RAW = "raw_data/CCLE_Expression_Entrez_2012-09-29.gct"
+MRNA_PERCENT = "raw_data/CCLE_Expression_Entrez_2012-09-29.percent.gct"
+DRUG_RESPON_RAW = "raw_data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
+DRUG_RESPON_PERCENT = "raw_data/CCLE_NP24.2009_Drug_data_2015.02.24_ActAreaPercent.csv"
 
 def main():
     #drug_keys = drug()
     gene_keys = gene()
-    cell_keys = cell()
+    #cell_keys = cell()
     #drug_target(drug_keys, gene_keys)
     #essential(cell_keys, gene_keys)
-    not_essential(cell_keys, gene_keys)
+    #not_essential(cell_keys, gene_keys)
     #active(cell_keys, gene_keys)
     #sensitive(cell_keys, drug_keys)
     #tissue_keys = tissue(cell_keys)
@@ -86,7 +86,7 @@ def gene():
         for i, gene in enumerate(gene_set):
             key = "G" + str(i)
             gene_keys[gene] = key
-            f.write("G{0}\t{1}\n".format(key, gene))
+            f.write("{0}\t{1}\n".format(key, gene))
         f.close()
     return gene_keys
 
