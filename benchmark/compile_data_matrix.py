@@ -22,13 +22,11 @@ def filling_features(df, gene_set):
     
     for index, row in df.iterrows():
         print index
-        cell = row.cell_drug_pair.split("D")[0]
-        drug = "D" + row.cell_drug_pair.split("D")[-1]
-        active_cell_df = active_df[active_df[0] == cell].copy()
-        essential_cell_df = essential_df[essential_df[0] == cell].copy() 
+        active_cell_df = active_df[active_df[0] == row.cell].copy()
+        essential_cell_df = essential_df[essential_df[0] == row.cell].copy() 
         
         for gene in features.keys():
-            if drug in gene_drug_dict[gene]:
+            if row.drug in gene_drug_dict[gene]:
                 features[gene]["targeted"].append(1)
             else:
                 features[gene]["targeted"].append(0)
@@ -57,6 +55,8 @@ def get_cell_drug_pairs():
     overlap_cell_drug_set = sensitive_set.intersection(active_set).intersection(essential_set)
     sensitive_df = sensitive_df[sensitive_df.cell_drug_pair.isin(overlap_cell_drug_set)]
     sensitive_df.index = range(len(sensitive_df.index))
+    sensitive_df['cell'] = [x.split("D")[0] for x in sensitive_df.cell_drug_pair]
+    sensitive_df['drug'] = ["D" + x.split("D")[1] for x in sensitive_df.cell_drug_pair]
     return sensitive_df, overlap_gene_set
 
 
