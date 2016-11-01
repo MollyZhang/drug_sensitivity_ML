@@ -2,48 +2,33 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 
-
 import compare_y
 
-MODEL = "second"
+TRUTH_FOLDER = "../psl/data/overlap_cell_gene/seed0/cross_val_6fold/"
+INFER_FOLDER = "../psl/result/overlap/"
 
 
 def main():
-    train_file = "../psl/data/first_model/seed0/cross_val/5fold/fold{0}_train.txt"
-    test_file = "../psl/data/first_model/seed0/cross_val/5fold/fold{0}_val.txt"
-    infer_file = "../psl/result/{0}_model/{0}_model_cross_val_fold{1}_result{2}.txt" 
+    truth = TRUTH_FOLDER + "fold{0}_{1}_truth.txt"
+    infer = INFER_FOLDER + "cross_val_fold{0}_{1}_result.txt"
     rows = []
-    for fold in range(1, 6):
-        tr_df = compare_y.load_data(train_file.format(fold))
-        val_df = compare_y.load_data(test_file.format(fold))
-        infer_df = compare_y.load_data(infer_file.format(MODEL, fold, ""))
-        infer_df_active = compare_y.load_data(infer_file.format(MODEL, fold, "_activeRule"))
-        infer_df_essen = compare_y.load_data(infer_file.format(MODEL, fold, "_essentialRule"))
-        
-        tr_both_rules, _, _ = compare_y.calculate_accuracy(tr_df, infer_df)
-        test_both_rules, _, _ = compare_y.calculate_accuracy(val_df, infer_df)
-        tr_active_rule, _, _ = compare_y.calculate_accuracy(tr_df, infer_df_active)
-        test_active_rule, _, _ = compare_y.calculate_accuracy(val_df, infer_df_active)
-        tr_essen_rule, _, _ = compare_y.calculate_accuracy(tr_df, infer_df_essen)
-        test_essen_rule, _, _ = compare_y.calculate_accuracy(val_df, infer_df_essen)
-        
-        rows.append({"train_both_rules": tr_both_rules, "test_both_rules": test_both_rules,
-                     "train_active_rule": tr_active_rule, "test_active_rule": test_active_rule,
-                     "train_essential_rule": tr_essen_rule, "test_essential_rule": test_essen_rule})
+    for fold in range(1, 7):
+        mse_dict = {}
+        for datatype in ["train", "val"]:
+            truth_df = compare_y.load_data(truth.format(fold, datatype))
+            infer_df = compare_y.load_data(infer.format(fold, datatype))
+            mse, _, _ = compare_y.calculate_accuracy(truth_df, infer_df)
+            mse_dict[datatype] = mse           
+        rows.append(mse_dict)
     df = pd.DataFrame(rows)
-    df = df[["train_both_rules", "test_both_rules", "train_active_rule", "test_active_rule",
-             "train_essential_rule", "test_essential_rule"]]
-
+    print df
     plotting(df)
-
 
 
 def plotting(df):
     mean = df.mean()
     std = df.std()
-    nice_mean = prettifying_df_for_bar_plot(mean)
-    nice_std = prettifying_df_for_bar_plot(std)
-    ax = nice_mean.plot.bar(yerr=nice_std, rot=30, alpha=0.75)
+    ax = mean.plot.bar(yerr=std, rot=30, alpha=0.75)
     ax.set_ylabel("Mean Squared Error")
     for rect in ax.patches:
         height = rect.get_height()
