@@ -12,159 +12,77 @@ WRITE_DIR = "psl/data/overlap_cell_gene/"
 
 
 def main():
-    gene_keys = gene()
-    cell_keys = cell()
-    #drug_keys = drug()
-    #drug_target(drug_keys, gene_keys)
-    #essential(cell_keys, gene_keys)
-    #not_essential(cell_keys, gene_keys)
-    #active(cell_keys, gene_keys)
-    #sensitive(cell_keys, drug_keys)
+    drug_to_save, gene_to_save, cell_to_save = parse_psl_overlapping_data()
+    gene_keys = gene(gene_to_save)
+    cell_keys = cell(cell_to_save)
+    drug_keys = drug(drug_to_save)
+    drug_gene_keys = write_drug_target(drug_to_save, gene_to_save)
  
 
-def gene():
+def parse_psl_overlapping_data():
+    """parse from overlapping data matrix used for SVM bench mark"""
+
+    print "generate sensitive_truth.txt"
+    df = pd.read_csv("benchmark/data_table_percentile.tsv", delimiter="\t")
+    sensitive_df = df[["cell", "drug", "sensitivity_label"]].copy()
+    sensitive_df.to_csv(WRITE_DIR + "sensitive_truth.txt", sep="\t", header=None, index=False)
+
+    print "generate active.txt"
+    active_columns = [c for c in df.columns if "active" in c]
+    active_df = df[["cell"] +  active_columns].copy()
+    active_df = active_df.drop_duplicates()
+    gene_to_save = [c.split("_")[0] for c in active_df.columns]
+    active_df.columns = gene_to_save
+    psl_active_df = pd.melt(active_df, var_name="gene", value_name="activity", id_vars=["cell"])
+    psl_active_df.to_csv(WRITE_DIR + "active.txt", sep="\t", header=None, index=False)
+
+    print "generate essential.txt"
+    essen_columns = [c for c in df.columns if "essential" in c]
+    essential_df = df[["cell"] +  essen_columns].copy()
+    essential_df = essential_df.drop_duplicates()
+    essential_df.columns = gene_to_save 
+    psl_essen_df = pd.melt(essential_df, var_name="gene", value_name="essentiality", id_vars=["cell"])
+    psl_essen_df.to_csv(WRITE_DIR + "essential.txt", sep="\t", header=None, index=False)
+
+    return set(df.drug), set(gene_to_save), set(df.cell)
+
+def gene(gene_to_save):
     """ save overlap between all drug target genes, active genes and essential genes to gene predicate file"""
     print "generate gene.txt"
-    drug_df = pd.read_csv(PSL_DATA_DIR + "drug_target.txt", delimiter="\t", header=None)
-    active_df = pd.read_csv(PSL_DATA_DIR + "active.txt", delimiter="\t", header=None)
-    essential_df = pd.read_csv(PSL_DATA_DIR + "essential.txt", delimiter="\t", header=None)
- 
-    overlap_gene_set = set(drug_df[1]).intersection(set(active_df[1])).intersection(set(essential_df[1]))
     gene_df = pd.read_csv(PSL_DATA_DIR + "gene.txt", delimiter="\t", header=None)
-    overlap_gene_df = gene_df[gene_df[0].isin(overlap_gene_set)].copy()
+    overlap_gene_df = gene_df[gene_df[0].isin(gene_to_save)].copy()
     gene_keys = dict(zip(overlap_gene_df[0], overlap_gene_df[1]))
     overlap_gene_df.to_csv(WRITE_DIR + "gene.txt", sep="\t", header=None, index=False) 
     return gene_keys
 
 
-def cell():
-    # intersection of cell lines from all data
+def cell(cell_to_save):
     print "generate cell.txt"
-    drug_df = pd.read_csv(PSL_DATA_DIR + "sensitive_truth.txt", delimiter="\t", header=None)
-    active_df = pd.read_csv(PSL_DATA_DIR + "active.txt", delimiter="\t", header=None)
-    essential_df = pd.read_csv(PSL_DATA_DIR + "essential.txt", delimiter="\t", header=None)
-    
-    cell_set = set(active_df[0]).intersection(set(drug_df[0])).intersection(set(essential_df[0]))
     cell_df = pd.read_csv(PSL_DATA_DIR + "cell.txt", delimiter="\t", header=None)
-    overlap_cell_df = cell_df[cell_df[0].isin(cell_set)].copy()
+    overlap_cell_df = cell_df[cell_df[0].isin(cell_to_save)].copy()
     overlap_cell_df.to_csv(WRITE_DIR + "cell.txt", sep="\t", header=None, index=False)
     cell_keys = dict(zip(overlap_cell_df[0], overlap_cell_df[1]))
     return cell_keys
 
 
-def drug_target(drug_keys, gene_keys):
+def drug(drug_to_save):
+    print "generate drug.txt"
+    drug_df = pd.read_csv(PSL_DATA_DIR + "drug.txt", delimiter="\t", header=None)
+    overlap_drug_df = drug_df[drug_df[0].isin(drug_to_save)].copy()
+    overlap_drug_df.to_csv(WRITE_DIR + "drug.txt", sep="\t", header=None, index=False)
+    drug_keys = dict(zip(overlap_drug_df[0], overlap_drug_df[1]))
+    return drug_keys
+
+
+def write_drug_target(drug_to_save, gene_to_save):
     print "generate drug_target.txt"
-    df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
-    drug_target = {}
-    for drug, gene in zip(df[1], df[0]):
-        if drug in drug_target.keys():
-            drug_target[drug].append(gene)
-        else:
-            drug_target[drug] = [gene]
-    f = open("psl/data/first_model/drug_target.txt", "w")
-    for drug, genes in drug_target.iteritems():
-        for gene in genes:
-            f.write("{0}\t{1}\n".format(drug_keys[drug], gene_keys[gene]))
-    f.close()
+    df = pd.read_csv(PSL_DATA_DIR + "drug_target.txt", delimiter="\t", header=None)
+    overlap_df = df[df[0].isin(drug_to_save) & df[1].isin(gene_to_save)].copy()
+    overlap_df.to_csv(WRITE_DIR + "drug_target.txt", sep="\t", header=None, index=False)
+    drug_gene_keys = dict(zip(overlap_df[0], overlap_df[1]))
+    return drug_gene_keys
 
-
-def essential(cell_keys, gene_keys):
-    """generate essential.txt file for psl"""
-    print "generate essential.txt"
-    def take_negative(n):
-        return -n
-    try: 
-        df = pd.read_csv(ESSEN_PERCENT, delimiter="\t", index_col="Description")
-    except IOError: 
-        # clean and build percentile file from scratch if it doesn't exist
-        print "creating the percentile version of the essential file, takes ~20 min"
-        df = pd.read_csv(ESSEN_RAW, delimiter="\t") 
-        df.dropna(inplace=True)
-        df = remove_duplicate_solutions(df)
-        df = df.set_index("Description")
-        df = df.drop("Name", axis=1)
-        df = df.applymap(take_negative)
-        df = percentile_scaler(df)
-        df.to_csv(ESSEN_PERCENT, sep="\t")
-
-    f = open("psl/data/first_model/essential.txt", "w")
-    for cell in set(df.columns).intersection(set(cell_keys.keys())):
-        for gene in gene_keys.keys():
-            if gene in df.index:
-                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
-    f.close()
-
-
-def not_essential(cell_keys, gene_keys):
-    """generate not_essential.txt file for psl"""
-    print "generate not_essential.txt"
-    df = pd.read_csv(ESSEN_PERCENT, delimiter="\t", index_col="Description")
-    f = open("psl/data/first_model/not_essential.txt", "w")
-    for cell in set(df.columns).intersection(set(cell_keys.keys())):
-        for gene in gene_keys.keys():
-            if gene in df.index:
-                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], 1-df[cell][gene]))
-    f.close()
-
-
-def active(cell_keys, gene_keys):
-    # TODO currently gene "TTL" has two rows and both rows are dropped, could deal better    
-    print "generate active.txt"
-    try:
-        df = pd.read_csv(MRNA_PERCENT, delimiter="\t", index_col="Description")
-    except IOError:
-        # clean and build percentile file from scratch if it doesn't exist
-        print "creating the percentile version of the file, takes ~10 hours :("
-        df = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
-        df.dropna(inplace=True)
-        df = df[df.Description != "TTL"]
-        df = df.set_index("Description")
-        df = df.drop("Name", axis=1)
-        df = percentile_scaler(df)
-        df.to_csv(MRNA_PERCENT, sep="\t")
-    
-    f = open("psl/data/first_model/active.txt", "w")
-    for cell in set(df.columns).intersection(set(cell_keys.keys())):
-        for gene in gene_keys.keys():
-            if gene in df.index:
-                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
-    f.close()
-
- 
-def sensitive(cell_keys, drug_keys):
-    # sensitive truth value between cell line and drug pairs covered in CCLE data
-    # as well as sensitive target which is a exhaustive list of all cell-drug pairs
-    print "generate sensitive.txt"
-    try:
-        df = pd.read_csv(DRUG_RESPON_PERCENT, delimiter="\t")
-    except IOError:
-        print "creating the percentile version of the file, takes ~5 min"
-        df = pd.read_csv(DRUG_RESPON_RAW)
-        df = df[["CCLE Cell Line Name", "Compound", "ActArea"]].copy()
-        df.ActArea = percentile_scaler(pd.DataFrame(df.ActArea))
-        df.to_csv(DRUG_RESPON_PERCENT, sep="\t", index=False)
-
-    cells = set(df["CCLE Cell Line Name"])
-    drugs = set(df["Compound"])
-    f_truth = open("psl/data/first_model/sensitive_truth.txt", "w")
-    for cell in cells:
-        for drug in drugs:
-            ActArea = df[(df["CCLE Cell Line Name"] == cell) & (df["Compound"] == drug)].ActArea
-            if len(ActArea) == 0:
-                continue
-            elif len(ActArea) > 1:
-                raise Exception("bad times")
-            else:
-                f_truth.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], 
-                                                       drug_keys[drug], ActArea.values[0]))
-    f_truth.close()
-
-    f_target = open("psl/data/first_model/sensitive_target.txt", "w")
-    for cell in cell_keys.values():
-        for drug in drug_keys.values():
-            f_target.write("{0}\t{1}\n".format(cell, drug))
-    f_target.close()
-
+        
 
 
 if __name__=="__main__":
