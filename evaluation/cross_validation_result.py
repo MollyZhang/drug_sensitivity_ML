@@ -22,7 +22,9 @@ def main():
         rows.append(mse_dict)
     df = pd.DataFrame(rows)
     print df
-    plotting(df)
+    print df.mean()
+    print df.std()
+    #plotting(df)
 
 
 def plotting(df):
