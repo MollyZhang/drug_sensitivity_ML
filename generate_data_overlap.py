@@ -13,10 +13,20 @@ WRITE_DIR = "psl/data/overlap_cell_gene/"
 
 def main():
     drug_to_save, gene_to_save, cell_to_save = parse_psl_overlapping_data()
-    gene_keys = gene(gene_to_save)
+    #gene_keys = gene(gene_to_save)
     cell_keys = cell(cell_to_save)
     drug_keys = drug(drug_to_save)
-    drug_gene_keys = write_drug_target(drug_to_save, gene_to_save)
+    #drug_gene_keys = write_drug_target(drug_to_save, gene_to_save)
+    generate_cell_drug_target(cell_keys, drug_keys)
+    
+
+def generate_cell_drug_target(cell_keys, drug_keys):
+    print "generate sensitive_target.txt"
+    f_target = open(WRITE_DIR + "sensitive_target.txt", "w")
+    for cell in cell_keys.keys():
+        for drug in drug_keys.keys():
+            f_target.write("{0}\t{1}\n".format(cell, drug))
+    f_target.close()
  
 
 def parse_psl_overlapping_data():
@@ -26,7 +36,7 @@ def parse_psl_overlapping_data():
     df = pd.read_csv("benchmark/data_table_percentile.tsv", delimiter="\t")
     sensitive_df = df[["cell", "drug", "sensitivity_label"]].copy()
     sensitive_df.to_csv(WRITE_DIR + "sensitive_truth.txt", sep="\t", header=None, index=False)
-
+    
     print "generate active.txt"
     active_columns = [c for c in df.columns if "active" in c]
     active_df = df[["cell"] +  active_columns].copy()
