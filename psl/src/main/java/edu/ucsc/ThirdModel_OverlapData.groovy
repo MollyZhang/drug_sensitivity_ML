@@ -34,10 +34,10 @@ for (i=1; i<= nfold; i++) {
     println "fold ${i}"
     ////////////////////////// initial setup ////////////////////////
     ConfigManager cm = ConfigManager.getManager()
-    ConfigBundle config = cm.getBundle("third-model")
+    ConfigBundle config = cm.getBundle("first-model")
     
     def defaultPath = System.getProperty("java.io.tmpdir")
-    String dbpath = config.getString("dbpath", defaultPath + File.separator + "third-model")
+    String dbpath = config.getString("dbpath", defaultPath + File.separator + "first-model")
     DataStore data = new RDBMSDataStore(new H2DatabaseDriver(Type.Disk, dbpath, true), config)
     PSLModel m = new PSLModel(this, data)
     
@@ -117,7 +117,7 @@ for (i=1; i<= nfold; i++) {
     
     println "saving inference results to result/"
     DecimalFormat formatter = new DecimalFormat("#.#######");
-    def result_file = new File("result/overlap/cross_val_fold${i}_train_result.txt");
+    def result_file = new File("result/compare_wrong_correct_model/correct_fold${i}_train_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db1, Sensitive)) {
         for (int i=0; i<2; i++) {
@@ -166,7 +166,7 @@ for (i=1; i<= nfold; i++) {
     inferenceApp2.close();
     
     println "saving inference results to result/"
-    def result_file2 = new File("result/overlap/cross_val_fold${i}_val_result.txt");
+    def result_file2 = new File("result/compare_wrong_correct_model/correct_fold${i}_val_result.txt");
     result_file2.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {

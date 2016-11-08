@@ -63,8 +63,8 @@ for (i=1; i<= nfold; i++) {
     
     //////////////////////////// data setup ///////////////////////////
     // loads data
-    def dir = 'data'+java.io.File.separator +"first_model"+java.io.File.separator;
-    def target_dir = "seed0" + java.io.File.separator + "cross_val" + java.io.File.separator + "5fold" + java.io.File.separator;
+    def dir = 'data'+java.io.File.separator +"overlap_cell_gene"+java.io.File.separator;
+    def target_dir = "seed0" + java.io.File.separator + "cross_val_6fold" + java.io.File.separator;
     def evidencePartition = new Partition(0);
     
     insert = data.getInserter(Drug, evidencePartition);
@@ -89,14 +89,14 @@ for (i=1; i<= nfold; i++) {
     // add target atoms
     def targetPartition = new Partition(1);
     insert = data.getInserter(Sensitive, targetPartition);
-    InserterUtils.loadDelimitedData(insert, dir + "sensitive_target.txt");
+    InserterUtils.loadDelimitedData(insert, dir+"sensitive_target.txt");
     
     Database db = data.getDatabase(targetPartition, [Drug, Gene, Cell, DrugTarget, Essential, Active] as Set, evidencePartition);
     
     //////////////////////////// weight learning ///////////////////////////
     Partition trueDataPartition = new Partition(2);
     insert = data.getInserter(Sensitive, trueDataPartition)
-    InserterUtils.loadDelimitedDataTruth(insert, dir+target_dir+"fold${i}_train.txt");
+    InserterUtils.loadDelimitedDataTruth(insert, dir+target_dir+"fold${i}_train_truth.txt");
     
     Database trueDataDB = data.getDatabase(trueDataPartition, [Sensitive] as Set);
     MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(m, db, trueDataDB, config);
@@ -115,7 +115,7 @@ for (i=1; i<= nfold; i++) {
     
     println "saving inference results to result/"
     DecimalFormat formatter = new DecimalFormat("#.#######");
-    def result_file = new File("result/first_model/cross_val_fold${i}_result.txt");
+    def result_file = new File("result/compare_wrong_correct_model/wrong_fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
         for (int i=0; i<2; i++) {
