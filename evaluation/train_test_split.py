@@ -10,15 +10,16 @@ from sklearn.model_selection import KFold, train_test_split
 
 
 
-DATA_PATH = "../psl/data/overlap_cell_gene/"
-
+OVERLAP_DATA_PATH = "../psl/data/overlap/"
+UNION_DATA_PATH = "../psl/data/union/"
 
 def main():
-    data_split(cv_fold=6, seed=0)
+    data_split(OVERLAP_DATA_PATH, cv_fold=6, seed=0)
+    data_split(UNION_DATA_PATH, cv_fold=6, seed=0)
 
 
-def data_split(cv_fold=6, seed=0):
-    folder = "{0}/seed{1}/".format(DATA_PATH, seed)
+def data_split(path, cv_fold=6, seed=0):
+    folder = "{0}/seed{1}/".format(path, seed)
     try:
         subprocess.call(["rm", "-rf", folder]) 
         os.mkdir(folder)
@@ -29,7 +30,7 @@ def data_split(cv_fold=6, seed=0):
 
     #train_file = test_train_split(folder, seed=seed, test_percent=test_percent)
     
-    df = pd.read_csv(DATA_PATH + "sensitive_truth.txt", delimiter="\t", header=None,
+    df = pd.read_csv(path + "sensitive_truth.txt", delimiter="\t", header=None,
                      names=["cell", "drug", "sensitive_label"])
 
     for fold, tr_df, val_df, test_df in cross_validation_split(df, cv_fold=cv_fold, seed=seed):
