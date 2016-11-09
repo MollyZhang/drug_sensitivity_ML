@@ -62,7 +62,7 @@ for (i=1; i<= nfold; i++) {
     
     //////////////////////////// data setup ///////////////////////////
     // loads data
-    def dir = 'data'+java.io.File.separator +"overlap_cell_gene"+java.io.File.separator;
+    def dir = 'data'+java.io.File.separator +"union"+java.io.File.separator;
     def target_dir = "seed0" + java.io.File.separator + "cross_val_6fold" + java.io.File.separator;
     def evidencePartition = new Partition(0);
     
@@ -117,7 +117,7 @@ for (i=1; i<= nfold; i++) {
     
     println "saving inference results to result/"
     DecimalFormat formatter = new DecimalFormat("#.#######");
-    def result_file = new File("result/compare_wrong_correct_model/correct_fold${i}_train_result.txt");
+    def result_file = new File("result/compare_wrong_correct_model/union_correct_fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db1, Sensitive)) {
         for (int i=0; i<2; i++) {
@@ -166,13 +166,11 @@ for (i=1; i<= nfold; i++) {
     inferenceApp2.close();
     
     println "saving inference results to result/"
-    def result_file2 = new File("result/compare_wrong_correct_model/correct_fold${i}_val_result.txt");
-    result_file2.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {
-            result_file2 << atom.arguments[i].toString() + "\t"
+            result_file << atom.arguments[i].toString() + "\t"
         }
-        result_file2 << formatter.format(atom.getValue()) + "\n"}
+        result_file << formatter.format(atom.getValue()) + "\n"}
     
     // close the Databases to flush writes
     db2.close();

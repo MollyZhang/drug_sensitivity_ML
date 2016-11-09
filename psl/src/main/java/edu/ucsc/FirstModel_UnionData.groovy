@@ -63,7 +63,7 @@ for (i=1; i<= nfold; i++) {
     
     //////////////////////////// data setup ///////////////////////////
     // loads data
-    def dir = 'data'+java.io.File.separator +"overlap_cell_gene"+java.io.File.separator;
+    def dir = 'data'+java.io.File.separator +"union"+java.io.File.separator;
     def target_dir = "seed0" + java.io.File.separator + "cross_val_6fold" + java.io.File.separator;
     def evidencePartition = new Partition(0);
     
@@ -115,7 +115,7 @@ for (i=1; i<= nfold; i++) {
     
     println "saving inference results to result/"
     DecimalFormat formatter = new DecimalFormat("#.#######");
-    def result_file = new File("result/compare_wrong_correct_model/wrong_fold${i}_result.txt");
+    def result_file = new File("result/compare_wrong_correct_model/union_wrong_fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db, Sensitive)) {
         for (int i=0; i<2; i++) {

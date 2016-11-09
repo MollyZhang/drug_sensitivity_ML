@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+import seaborn as sns
+import matplotlib as mpl
+mpl.rcParams['backend'] = "TkAgg"
 
 import compare_y
 
@@ -13,23 +16,32 @@ def main():
 
 
 def comparing_wrong_and_correct_model():
-    rows = []
+    final_rows = []
     for data_scope in ["union", "overlap"]:  
-        truth = TRUTH.format(data_scope) + "fold{0}_{1}_truth.txt"
-        infer = INFER_FOLDER + "overlap_{0}_fold{1}_result.txt"
-        for fold in range(1, 7):
-            for model in ["wrong", "correct"]:
+        for model in ["wrong", "correct"]:
+            rows = []
+            for fold in range(1, 7):
                 mse_dict = {}
-                infer_df = compare_y.load_data(infer.format(model, fold))
-                for datatype in ["train", "val"]:
-                    truth_df = compare_y.load_data(truth.format(fold, datatype))
-                    mse, _, _ = compare_y.calculate_accuracy(truth_df, infer_df)
-                    mse_dict["data_scopt"] = data_scope
-                    mse_dict["model"] = model
-                    mse_dict[datatype] = mse
-                rows.append(mse_dict)
-    df = pd.DataFrame(rows)
-    print df
+                infer_file = INFER_FOLDER + "{0}_{1}_fold{2}_result.txt".format(data_scope, model, fold)
+                truth_train_file = TRUTH.format(data_scope) + "fold{0}_train_truth.txt".format(fold)
+                truth_val_file = TRUTH.format(data_scope) + "fold{0}_val_truth.txt".format(fold)
+                infer_df = compare_y.load_data(infer_file)
+                truth_train_df = compare_y.load_data(truth_train_file)
+                truth_val_df = compare_y.load_data(truth_val_file)
+                train_mse, _, _ = compare_y.calculate_accuracy(truth_train_df, infer_df)
+                val_mse, _, _ = compare_y.calculate_accuracy(truth_val_df, infer_df)
+                rows.append({"train_mse": train_mse, "val_mse": val_mse}) 
+            df = pd.DataFrame(rows)       
+            final_rows.append({"mse": float(df.mean()["train_mse"]), 
+                               "data_scope": data_scope, "model": model, "type": "train"})
+            final_rows.append({"mse": float(df.mean()["val_mse"]), 
+                               "data_scope": data_scope, "model": model, "type": "val"})
+    df_final = pd.DataFrame(final_rows)
+    print df_final
+    g = sns.factorplot(x="model", y = "mse", col="data_scope", hue="type", data=df_final, 
+                       kind="bar", legend=False)
+    g.set_xlabels("")
+    plt.show()
 
 
 def plotting(df):
