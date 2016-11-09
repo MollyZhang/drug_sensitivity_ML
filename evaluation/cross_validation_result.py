@@ -4,27 +4,32 @@ from matplotlib import pyplot as plt
 
 import compare_y
 
-TRUTH_FOLDER = "../psl/data/overlap_cell_gene/seed0/cross_val_6fold/"
-INFER_FOLDER = "../psl/result/overlap/"
+TRUTH = "../psl/data/{0}/seed0/cross_val_6fold/"
+INFER_FOLDER = "../psl/result/compare_wrong_correct_model/"
 
 
 def main():
-    truth = TRUTH_FOLDER + "fold{0}_{1}_truth.txt"
-    infer = INFER_FOLDER + "cross_val_fold{0}_{1}_result.txt"
+    comparing_wrong_and_correct_model()
+
+
+def comparing_wrong_and_correct_model():
     rows = []
-    for fold in range(1, 7):
-        mse_dict = {}
-        for datatype in ["train", "val"]:
-            truth_df = compare_y.load_data(truth.format(fold, datatype))
-            infer_df = compare_y.load_data(infer.format(fold, datatype))
-            mse, _, _ = compare_y.calculate_accuracy(truth_df, infer_df)
-            mse_dict[datatype] = mse           
-        rows.append(mse_dict)
+    for data_scope in ["union", "overlap"]:  
+        truth = TRUTH.format(data_scope) + "fold{0}_{1}_truth.txt"
+        infer = INFER_FOLDER + "overlap_{0}_fold{1}_result.txt"
+        for fold in range(1, 7):
+            for model in ["wrong", "correct"]:
+                mse_dict = {}
+                infer_df = compare_y.load_data(infer.format(model, fold))
+                for datatype in ["train", "val"]:
+                    truth_df = compare_y.load_data(truth.format(fold, datatype))
+                    mse, _, _ = compare_y.calculate_accuracy(truth_df, infer_df)
+                    mse_dict["data_scopt"] = data_scope
+                    mse_dict["model"] = model
+                    mse_dict[datatype] = mse
+                rows.append(mse_dict)
     df = pd.DataFrame(rows)
     print df
-    print df.mean()
-    print df.std()
-    #plotting(df)
 
 
 def plotting(df):
@@ -48,9 +53,6 @@ def prettifying_df_for_bar_plot(df):
         nice_df.loc[rest][exp_type] = df[name]
     return nice_df 
     
-
-
-
 
 if __name__=="__main__":
     main()
