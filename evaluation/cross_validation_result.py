@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
 mpl.rcParams['backend'] = "TkAgg"
+from matplotlib import pyplot as plt
 
 import compare_y
 
@@ -28,18 +28,23 @@ def comparing_wrong_and_correct_model():
                 infer_df = compare_y.load_data(infer_file)
                 truth_train_df = compare_y.load_data(truth_train_file)
                 truth_val_df = compare_y.load_data(truth_val_file)
-                train_mse, _, _ = compare_y.calculate_accuracy(truth_train_df, infer_df)
-                val_mse, _, _ = compare_y.calculate_accuracy(truth_val_df, infer_df)
+                train_mse, train_rho, _, _ = compare_y.calculate_accuracy(truth_train_df, infer_df)
+                val_mse, val_rho, _, _ = compare_y.calculate_accuracy(truth_val_df, infer_df)
                 rows.append({"train_mse": train_mse, "val_mse": val_mse}) 
-            df = pd.DataFrame(rows)       
+                rows.append({"train_rho": train_rho, "val_rho": val_rho}) 
+            df = pd.DataFrame(rows)
+            print data_scope, model
+            print df.std() 
             final_rows.append({"mse": float(df.mean()["train_mse"]), 
+                               "spearman rank correlation": float(df.mean()["train_rho"]),
                                "data_scope": data_scope, "model": model, "type": "train"})
             final_rows.append({"mse": float(df.mean()["val_mse"]), 
+                               "spearman rank correlation": float(df.mean()["val_rho"]),
                                "data_scope": data_scope, "model": model, "type": "val"})
     df_final = pd.DataFrame(final_rows)
     print df_final
-    g = sns.factorplot(x="model", y = "mse", col="data_scope", hue="type", data=df_final, 
-                       kind="bar", legend=False)
+    g = sns.factorplot(x="model", y = "spearman rank correlation", col="data_scope", hue="type", data=df_final, 
+                       kind="bar", size=4)
     g.set_xlabels("")
     plt.show()
 

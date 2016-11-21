@@ -1,7 +1,7 @@
 import sklearn.metrics
 import pandas as pd
 import numpy as np
-
+import scipy as sp
 
 
 def main():
@@ -33,8 +33,13 @@ def calculate_accuracy(truth_df, infer_df):
     infer_df = infer_df.loc[infer_df.cell_drug_pair.isin(truth_df.cell_drug_pair)].copy()
     df = pd.merge(truth_df, infer_df, on="cell_drug_pair", suffixes=["_truth", "_infer"]) 
     mse = sklearn.metrics.mean_squared_error(df.y_truth, df.y_infer)
+    rho = sp.stats.spearmanr(df.y_truth, df.y_infer)[0]
     accuracy, auc = binary_result(df)
-    return mse, accuracy, auc
+    return mse, rho, accuracy, auc
+
+
+
+
 
 
 def binary_result(df):
