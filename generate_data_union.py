@@ -8,6 +8,8 @@ from sklearn import preprocessing
 
 
 DATA_FOLDER = "psl/data/union/min_max/"
+DATA_FOLDER_CUBEROOT = "psl/data/union/min_max_cuberoot/"
+
 
 DRUG_TARGET_RAW = "raw_data/combined_annotations_CCLEmapped.tab"
 ESSEN_RAW = "raw_data/Achilles_QC_v2.4.3.rnai.Gs.gct"
@@ -165,6 +167,14 @@ def essential(cell_keys, gene_keys):
             if gene in df.index:
                 f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
     f.close()
+    # additional cube root data
+    f = open(DATA_FOLDER_CUBEROOT + "essential.txt", "w")
+    for cell in set(df.columns).intersection(set(cell_keys.keys())):
+        for gene in gene_keys.keys():
+            if gene in df.index:
+                n = float(df[cell][gene]) ** (1.0/3)
+                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], n))
+    f.close()
 
 
 def not_essential(cell_keys, gene_keys):
@@ -201,6 +211,14 @@ def active(cell_keys, gene_keys):
             if gene in df.index:
                 f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], df[cell][gene]))
     f.close()
+    # cube root
+    f = open(DATA_FOLDER_CUBEROOT + "active.txt", "w")
+    for cell in set(df.columns).intersection(set(cell_keys.keys())):
+        for gene in gene_keys.keys():
+            if gene in df.index:
+                n = float(df[cell][gene]) ** (1.0/3)
+                f.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], gene_keys[gene], n))
+    f.close()
 
  
 def sensitive(cell_keys, drug_keys):
@@ -229,6 +247,19 @@ def sensitive(cell_keys, drug_keys):
             else:
                 f_truth.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], 
                                                        drug_keys[drug], ActArea.values[0]))
+    f_truth.close()
+    # cube root
+    f_truth = open(DATA_FOLDER_CUBEROOT + "sensitive_truth.txt", "w")
+    for cell in cells:
+        for drug in drugs:
+            ActArea = df[(df["CCLE Cell Line Name"] == cell) & (df["Compound"] == drug)].ActArea
+            if len(ActArea) == 0:
+                continue
+            elif len(ActArea) > 1:
+                raise Exception("bad times")
+            else:
+                n = float(ActArea.values[0]) ** (1.0/3)
+                f_truth.write("{0}\t{1}\t{2}\n".format(cell_keys[cell], drug_keys[drug], n))
     f_truth.close()
 
     f_target = open(DATA_FOLDER + "sensitive_target.txt", "w")

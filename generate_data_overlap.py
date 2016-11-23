@@ -7,16 +7,16 @@ from scipy import stats
 from pprint import pprint as pp
 
 
-PSL_DATA_DIR = "psl/data/first_model/"
-WRITE_DIR = "psl/data/overlap_cell_gene/"
+PSL_DATA_DIR = "psl/data/union/min_max_cuberoot/"
+WRITE_DIR = "psl/data/overlap/min_max_cuberoot/"
 
 
 def main():
     drug_to_save, gene_to_save, cell_to_save = parse_psl_overlapping_data()
-    #gene_keys = gene(gene_to_save)
+    gene_keys = gene(gene_to_save)
     cell_keys = cell(cell_to_save)
     drug_keys = drug(drug_to_save)
-    #drug_gene_keys = write_drug_target(drug_to_save, gene_to_save)
+    drug_gene_keys = write_drug_target(drug_to_save, gene_to_save)
     generate_cell_drug_target(cell_keys, drug_keys)
     
 
@@ -33,7 +33,7 @@ def parse_psl_overlapping_data():
     """parse from overlapping data matrix used for SVM bench mark"""
 
     print "generate sensitive_truth.txt"
-    df = pd.read_csv("benchmark/data_table_percentile.tsv", delimiter="\t")
+    df = pd.read_csv("benchmark/data_table_minmax_cuberoot.tsv", delimiter="\t")
     sensitive_df = df[["cell", "drug", "sensitivity_label"]].copy()
     sensitive_df.to_csv(WRITE_DIR + "sensitive_truth.txt", sep="\t", header=None, index=False)
     

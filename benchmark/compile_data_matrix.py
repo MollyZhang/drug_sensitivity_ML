@@ -2,13 +2,13 @@ import pandas as pd
 import numpy as np
 
 
-PSL_DATA_DIR = "../psl/data/union/min_max/"
+PSL_DATA_DIR = "../psl/data/union/min_max_cuberoot/"
 
 
 def main():
     df, gene_set = get_cell_drug_pairs()
     df = filling_features(df, gene_set)
-    df.to_csv("data_table_minmax.tsv", sep="\t", index=False)
+    df.to_csv("data_table_minmax_cuberoot.tsv", sep="\t", index=False)
 
 
 def filling_features(df, gene_set):
