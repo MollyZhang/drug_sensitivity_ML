@@ -4,26 +4,33 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 from pprint import pprint as pp
+from sklearn import preprocessing
+
+
+DATA_FOLDER = "psl/data/union/min_max/"
 
 DRUG_TARGET_RAW = "raw_data/combined_annotations_CCLEmapped.tab"
 ESSEN_RAW = "raw_data/Achilles_QC_v2.4.3.rnai.Gs.gct"
 ESSEN_PERCENT = "raw_data/Achilles_QC_v2.4.3.rnai.Gs.percent.txt"
+ESSEN_MINMAX = "raw_data/Achilles_QC_v2.4.3.rnai.Gs.minmax.txt"
 MRNA_RAW = "raw_data/CCLE_Expression_Entrez_2012-09-29.gct"
 MRNA_PERCENT = "raw_data/CCLE_Expression_Entrez_2012-09-29.percent.gct"
+MRNA_MINMAX = "raw_data/CCLE_Expression_Entrez_2012-09-29.minmax.gct"
 DRUG_RESPON_RAW = "raw_data/CCLE_NP24.2009_Drug_data_2015.02.24.csv"
 DRUG_RESPON_PERCENT = "raw_data/CCLE_NP24.2009_Drug_data_2015.02.24_ActAreaPercent.csv"
+DRUG_RESPON_MINMAX = "raw_data/CCLE_NP24.2009_Drug_data_2015.02.24_ActAreaMinMax.csv"
 
 def main():
-    #drug_keys = drug()
+    drug_keys = drug()
     gene_keys = gene()
-    #cell_keys = cell()
-    #drug_target(drug_keys, gene_keys)
-    #essential(cell_keys, gene_keys)
+    cell_keys = cell()
+    drug_target(drug_keys, gene_keys)
+    essential(cell_keys, gene_keys)
     #not_essential(cell_keys, gene_keys)
-    #active(cell_keys, gene_keys)
-    #sensitive(cell_keys, drug_keys)
-    #tissue_keys = tissue(cell_keys)
-    #is_tissue(cell_keys, tissue_keys)
+    active(cell_keys, gene_keys)
+    sensitive(cell_keys, drug_keys)
+    tissue_keys = tissue(cell_keys)
+    is_tissue(cell_keys, tissue_keys)
  
 
 def tissue(cell_keys):
@@ -38,7 +45,7 @@ def tissue(cell_keys):
         tissues.append(tissue)
     tissues = sorted(list(set(tissues)))
     tissue_keys = {}
-    with open("psl/data/first_model/tissue.txt", "w") as f:
+    with open(DATA_FOLDER + "tissue.txt", "w") as f:
         for i, tissue in enumerate(tissues):
             key = "T" + str(i)
             tissue_keys[tissue] = key
@@ -49,7 +56,7 @@ def tissue(cell_keys):
 
 def is_tissue(cell_keys, tissue_keys):
     print "generate is_tissue.txt"
-    f = open("psl/data/first_model/is_tissue.txt", "w")
+    f = open(DATA_FOLDER + "is_tissue.txt", "w")
     for name, key in cell_keys.iteritems():
         tissue = "_".join(name.split("_")[1:])
         if tissue == "": # some cell lines doesn't have a tissue name
@@ -60,13 +67,12 @@ def is_tissue(cell_keys, tissue_keys):
     f.close()
 
 
-
 def drug():
     print "generate drug.txt"
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     drug_set = set(df[1])
     drug_keys = {}
-    with open("psl/data/first_model/drug.txt", "w") as f:
+    with open(DATA_FOLDER + "drug.txt", "w") as f:
         for i, drug in enumerate(drug_set):
             key = "D" + str(i)
             drug_keys[drug] = key
@@ -82,7 +88,7 @@ def gene():
     df = pd.read_csv(DRUG_TARGET_RAW, delimiter="\t", header=None)
     gene_set = set(df[0])
     gene_keys = {}
-    with open("psl/data/first_model/gene.txt", "w") as f:
+    with open(DATA_FOLDER + "gene.txt", "w") as f:
         for i, gene in enumerate(gene_set):
             key = "G" + str(i)
             gene_keys[gene] = key
@@ -109,7 +115,7 @@ def cell():
 
     cell_set = cell1.union(cell2).union(cell3)
     cell_keys = {}
-    with open("psl/data/first_model/cell.txt", "w") as f:
+    with open(DATA_FOLDER + "cell.txt", "w") as f:
         for i, cell in enumerate(cell_set):
             key = "C" + str(i)
             cell_keys[cell] = key
@@ -127,7 +133,7 @@ def drug_target(drug_keys, gene_keys):
             drug_target[drug].append(gene)
         else:
             drug_target[drug] = [gene]
-    f = open("psl/data/first_model/drug_target.txt", "w")
+    f = open(DATA_FOLDER + "drug_target.txt", "w")
     for drug, genes in drug_target.iteritems():
         for gene in genes:
             f.write("{0}\t{1}\n".format(drug_keys[drug], gene_keys[gene]))
@@ -140,20 +146,20 @@ def essential(cell_keys, gene_keys):
     def take_negative(n):
         return -n
     try: 
-        df = pd.read_csv(ESSEN_PERCENT, delimiter="\t", index_col="Description")
+        df = pd.read_csv(ESSEN_MINMAX, delimiter="\t", index_col="Description")
     except IOError: 
-        # clean and build percentile file from scratch if it doesn't exist
-        print "creating the percentile version of the essential file, takes ~20 min"
+        # clean and build file from scratch if it doesn't exist
+        print "creating the right version of the essential file, takes ~20 min"
         df = pd.read_csv(ESSEN_RAW, delimiter="\t") 
         df.dropna(inplace=True)
         df = remove_duplicate_solutions(df)
         df = df.set_index("Description")
         df = df.drop("Name", axis=1)
         df = df.applymap(take_negative)
-        df = percentile_scaler(df)
-        df.to_csv(ESSEN_PERCENT, sep="\t")
+        df = minmax_scaler(df)
+        df.to_csv(ESSEN_MINMAX, sep="\t")
 
-    f = open("psl/data/first_model/essential.txt", "w")
+    f = open(DATA_FOLDER + "essential.txt", "w")
     for cell in set(df.columns).intersection(set(cell_keys.keys())):
         for gene in gene_keys.keys():
             if gene in df.index:
@@ -177,19 +183,19 @@ def active(cell_keys, gene_keys):
     # TODO currently gene "TTL" has two rows and both rows are dropped, could deal better    
     print "generate active.txt"
     try:
-        df = pd.read_csv(MRNA_PERCENT, delimiter="\t", index_col="Description")
+        df = pd.read_csv(MRNA_MINMAX, delimiter="\t", index_col="Description")
     except IOError:
-        # clean and build percentile file from scratch if it doesn't exist
-        print "creating the percentile version of the file, takes ~10 hours :("
+        # clean and build file from scratch if it doesn't exist
+        print "creating the minmax version of the file, takes ~10 hours :("
         df = pd.read_csv(MRNA_RAW, low_memory=False, delimiter="\t")
         df.dropna(inplace=True)
         df = df[df.Description != "TTL"]
         df = df.set_index("Description")
         df = df.drop("Name", axis=1)
-        df = percentile_scaler(df)
-        df.to_csv(MRNA_PERCENT, sep="\t")
+        df = minmax_scaler(df)
+        df.to_csv(MRNA_MINMAX, sep="\t")
     
-    f = open("psl/data/first_model/active.txt", "w")
+    f = open(DATA_FOLDER + "active.txt", "w")
     for cell in set(df.columns).intersection(set(cell_keys.keys())):
         for gene in gene_keys.keys():
             if gene in df.index:
@@ -202,17 +208,17 @@ def sensitive(cell_keys, drug_keys):
     # as well as sensitive target which is a exhaustive list of all cell-drug pairs
     print "generate sensitive.txt"
     try:
-        df = pd.read_csv(DRUG_RESPON_PERCENT, delimiter="\t")
+        df = pd.read_csv(DRUG_RESPON_MINMAX, delimiter="\t")
     except IOError:
         print "creating the percentile version of the file, takes ~5 min"
         df = pd.read_csv(DRUG_RESPON_RAW)
         df = df[["CCLE Cell Line Name", "Compound", "ActArea"]].copy()
-        df.ActArea = percentile_scaler(pd.DataFrame(df.ActArea))
-        df.to_csv(DRUG_RESPON_PERCENT, sep="\t", index=False)
+        df.ActArea = minmax_scaler(pd.DataFrame(df.ActArea))
+        df.to_csv(DRUG_RESPON_MINMAX, sep="\t", index=False)
 
     cells = set(df["CCLE Cell Line Name"])
     drugs = set(df["Compound"])
-    f_truth = open("psl/data/first_model/sensitive_truth.txt", "w")
+    f_truth = open(DATA_FOLDER + "sensitive_truth.txt", "w")
     for cell in cells:
         for drug in drugs:
             ActArea = df[(df["CCLE Cell Line Name"] == cell) & (df["Compound"] == drug)].ActArea
@@ -225,7 +231,7 @@ def sensitive(cell_keys, drug_keys):
                                                        drug_keys[drug], ActArea.values[0]))
     f_truth.close()
 
-    f_target = open("psl/data/first_model/sensitive_target.txt", "w")
+    f_target = open(DATA_FOLDER + "sensitive_target.txt", "w")
     for cell in cell_keys.values():
         for drug in drug_keys.values():
             f_target.write("{0}\t{1}\n".format(cell, drug))
@@ -263,6 +269,13 @@ def percentile_scaler(df):
             pt = stats.percentileofscore(df[cell], df[cell][gene])
             df_percentile[cell][gene] =  pt/100
     return df_percentile 
+
+
+def minmax_scaler(df):
+    """ scale data to [0, 1] using min-max scaling"""
+    min_max_scaler = preprocessing.MinMaxScaler()
+    return pd.DataFrame(min_max_scaler.fit_transform(df), 
+                        columns=df.columns, index=df.index)
 
 
 if __name__=="__main__":
