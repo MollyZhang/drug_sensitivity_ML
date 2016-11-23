@@ -2,18 +2,18 @@ import pandas as pd
 import numpy as np
 
 
-PSL_DATA_DIR = "../psl/data/first_model/"
+PSL_DATA_DIR = "../psl/data/union/min_max/"
 
 
 def main():
     df, gene_set = get_cell_drug_pairs()
     df = filling_features(df, gene_set)
-    df.to_csv("data_table_percentile.tsv", sep="\t", index=False)
+    df.to_csv("data_table_minmax.tsv", sep="\t", index=False)
 
 
 def filling_features(df, gene_set):
-    active_df = pd.read_csv("../psl/data/first_model/active.txt", delimiter="\t", header=None)
-    essential_df = pd.read_csv("../psl/data/first_model/essential.txt", delimiter="\t", header=None)
+    active_df = pd.read_csv(PSL_DATA_DIR + "active.txt", delimiter="\t", header=None)
+    essential_df = pd.read_csv(PSL_DATA_DIR + "essential.txt", delimiter="\t", header=None)
 
     gene_drug_dict = get_gene_drug_dict()
     features = {}
@@ -36,13 +36,11 @@ def filling_features(df, gene_set):
             features[gene]["active"].append(activity)
             features[gene]["essential"].append(essentiality)
 
-
     for gene in sorted(features.keys()):
         for rule in ["targeted", "active", "essential"]:
             df[gene + "_" + rule] = features[gene][rule]
     
     return df
-
 
 
 def get_cell_drug_pairs():
@@ -61,7 +59,7 @@ def get_cell_drug_pairs():
 
 
 def get_gene_drug_dict():
-    drug_target_file = "../psl/data/first_model/drug_target.txt"
+    drug_target_file = PSL_DATA_DIR + "drug_target.txt"
     drug_target_df = pd.read_csv(drug_target_file, delimiter="\t", header=None)
     drug_target_dict = {}
     for index, row in drug_target_df.iterrows():
@@ -73,7 +71,7 @@ def get_gene_drug_dict():
 
 
 def get_active_cell_drug_set(gene_drug_dict):
-    active_df = pd.read_csv("../psl/data/first_model/active.txt", delimiter="\t", header=None)
+    active_df = pd.read_csv(PSL_DATA_DIR + "active.txt", delimiter="\t", header=None)
     active_cell_drug_pairs = []
     for index, row in active_df.iterrows():
         if row[1] in gene_drug_dict.keys():
@@ -83,7 +81,7 @@ def get_active_cell_drug_set(gene_drug_dict):
 
 
 def get_essential_cell_drug_set(gene_drug_dict):
-    essential_df = pd.read_csv("../psl/data/first_model/essential.txt", delimiter="\t", header=None)
+    essential_df = pd.read_csv(PSL_DATA_DIR + "essential.txt", delimiter="\t", header=None)
     cell_drug_pairs = []
     for index, row in essential_df.iterrows():
         if row[1] in gene_drug_dict.keys():
@@ -93,7 +91,7 @@ def get_essential_cell_drug_set(gene_drug_dict):
     
 
 def get_sensitive_cell_drug_set():
-    sensitive_df = pd.read_csv("../psl/data/first_model/sensitive_truth.txt", delimiter="\t", header=None)
+    sensitive_df = pd.read_csv(PSL_DATA_DIR + "sensitive_truth.txt", delimiter="\t", header=None)
     cell_drug_pairs = []
     for index, row in sensitive_df.iterrows():
         cell_drug_pairs.append(row[0] + row[1])
@@ -102,7 +100,6 @@ def get_sensitive_cell_drug_set():
     sensitive_df["cell_drug_pair"] = cell_drug_pairs
     sensitive_df.rename(columns={2: "sensitivity_label"}, inplace=True)
     return set(cell_drug_pairs), sensitive_df
-
 
 
 if __name__=="__main__":
