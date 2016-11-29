@@ -1,0 +1,2 @@
+G1	EGFR
+G2	MDM2
