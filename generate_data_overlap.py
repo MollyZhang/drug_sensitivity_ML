@@ -6,9 +6,9 @@ import numpy as np
 from scipy import stats
 from pprint import pprint as pp
 
-
-PSL_DATA_DIR = "psl/data/union/min_max_cuberoot/"
-WRITE_DIR = "psl/data/overlap/min_max_cuberoot/"
+SOURCE_FILE = "benchmark/data_table_10gene.tsv"
+PSL_DATA_DIR = "psl/data/overlap/"
+WRITE_DIR = "psl/data/overlap/10gene/"
 
 
 def main():
@@ -33,7 +33,7 @@ def parse_psl_overlapping_data():
     """parse from overlapping data matrix used for SVM bench mark"""
 
     print "generate sensitive_truth.txt"
-    df = pd.read_csv("benchmark/data_table_minmax_cuberoot.tsv", delimiter="\t")
+    df = pd.read_csv(SOURCE_FILE, delimiter="\t")
     sensitive_df = df[["cell", "drug", "sensitivity_label"]].copy()
     sensitive_df.to_csv(WRITE_DIR + "sensitive_truth.txt", sep="\t", header=None, index=False)
     

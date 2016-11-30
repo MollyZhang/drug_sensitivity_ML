@@ -7,13 +7,29 @@ from matplotlib import pyplot as plt
 
 import compare_y
 
-TRUTH = "../psl/data/{0}/seed0/cross_val_6fold/"
-INFER_FOLDER = "../psl/result/compare_wrong_correct_model/"
+TRUTH = "../psl/data/overlap/10gene/seed0/cross_val_6fold/"
+INFER_FOLDER = "../psl/result/one_gene/10gene/"
 
 
 def main():
-    comparing_wrong_and_correct_model()
+    cross_val_result()
 
+def cross_val_result():
+    rows = []
+    for fold in range(1, 7):
+        infer_file = INFER_FOLDER + "fold{0}_result.txt".format(fold)
+        truth_train_file = TRUTH + "fold{0}_train_truth.txt".format(fold)
+        truth_val_file = TRUTH + "fold{0}_val_truth.txt".format(fold)
+        infer_df = compare_y.load_data(infer_file)
+        truth_train_df = compare_y.load_data(truth_train_file)
+        truth_val_df = compare_y.load_data(truth_val_file)
+        train_mse, train_rho, _, _ = compare_y.calculate_accuracy(truth_train_df, infer_df)
+        val_mse, val_rho, _, _ = compare_y.calculate_accuracy(truth_val_df, infer_df)
+        rows.append({"val_mse": val_mse, "val_rho": val_rho}) 
+    df = pd.DataFrame(rows)
+    print df.std()
+    print df.mean()
+    
 
 def comparing_wrong_and_correct_model():
     final_rows = []

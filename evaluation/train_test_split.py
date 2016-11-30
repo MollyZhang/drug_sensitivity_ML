@@ -10,12 +10,11 @@ from sklearn.model_selection import KFold, train_test_split
 
 
 
-OVERLAP_DATA_PATH = "../psl/data/overlap/"
+OVERLAP_DATA_PATH = "../psl/data/overlap/10gene/"
 UNION_DATA_PATH = "../psl/data/union/"
 
 def main():
     data_split(OVERLAP_DATA_PATH, cv_fold=6, seed=0)
-    data_split(UNION_DATA_PATH, cv_fold=6, seed=0)
 
 
 def data_split(path, cv_fold=6, seed=0):

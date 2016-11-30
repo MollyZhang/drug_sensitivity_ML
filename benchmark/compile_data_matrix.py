@@ -1,14 +1,17 @@
 import pandas as pd
 import numpy as np
+import random
 
 
-PSL_DATA_DIR = "../psl/data/union/min_max_cuberoot/"
+NUM_GENES = 10 
+PSL_DATA_DIR = "../psl/data/overlap/"
 
 
 def main():
     df, gene_set = get_cell_drug_pairs()
+    gene_set = random.sample(gene_set, NUM_GENES) 
     df = filling_features(df, gene_set)
-    df.to_csv("data_table_minmax_cuberoot.tsv", sep="\t", index=False)
+    df.to_csv("data_table_{0}gene.tsv".format(NUM_GENES), sep="\t", index=False)
 
 
 def filling_features(df, gene_set):
