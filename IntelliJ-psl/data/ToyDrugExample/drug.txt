@@ -1,4 +1,0 @@
-D1	Erlotinib
-D2	Nutlin-3
-D3	LBW242
-D4	17-AAG
