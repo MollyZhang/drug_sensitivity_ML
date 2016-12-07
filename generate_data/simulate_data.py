@@ -1,19 +1,27 @@
 """
-simulate perfect data with linear relations
+simulate perfect data with linear relations as well random noise
 """
 
 import numpy as np
 import itertools
 
 
-OUTPUT1 = "../data/similuated_matrix_perfect_linear.tsv"
-OUTPUT2_FOLDER = "../psl/data/simulation/perfect_linear/"
-PSL1 = OUTPUT2_FOLDER + "drug_gene_targets.txt"
-PSL2 = OUTPUT2_FOLDER + "cell_gene_activity.txt"
-PSL3 = OUTPUT2_FOLDER + "cell_drug_sensitivity_truth.txt"
-PSL4 = OUTPUT2_FOLDER + "cell_drug_sensitivity_target.txt"
+OUTPUT1 = ""
 
 def main():
+    simulate(data_type="linear")
+    simulate(data_type="random")
+
+
+def simulate(data_type="linear"):
+    psl_folder="../psl/data/simulation/" + data_type
+    matrix_file = "../data/similuated_matrix_{0}.tsv".format(data_type)
+    PSL1 = psl_folder + "/drug_gene_targets.txt"
+    PSL2 = psl_folder + "/cell_gene_activity.txt"
+    PSL3 = psl_folder + "/cell_drug_sensitivity_truth.txt"
+    PSL4 = psl_folder + "/cell_drug_sensitivity_target.txt"
+
+
     # write PSL drug targets
     with open(PSL1, "w") as f1:
         for drug_id in range(10):
@@ -48,7 +56,7 @@ def main():
     # compile PSL data into data matrix for other ML methods
     # rows label: cell-drug sensitivity
     # features, gene1-10 activity in cell, gene1-10 whether targeted by drug
-    f5 = open(OUTPUT1, "w")
+    f5 = open(matrix_file, "w")
     columns = ["cell-drug-pair", "cell", "drug"]
     for gene in ["G" + str(i) for i in range(10)]:
         columns += [gene + "_targeted", gene + "_activity"]
@@ -58,13 +66,16 @@ def main():
     cell_drug_pairs = [i for i in itertools.product(range(10), repeat=2)]
     for cell_id, drug_id in cell_drug_pairs:
         row = ["C" + str(cell_id) + "D" + str(drug_id), "C" + str(cell_id), "D" + str(drug_id)]
-        label = 0
+        linear_label = 0
         for gene_id in range(10):
             targeted = int(gene_id == drug_id)
             activity = expression_level[(cell_id, gene_id)]
-            label += targeted * activity
+            linear_label += targeted * activity
             row += [targeted, activity] 
-        row.append(label)
+        if data_type == "linear":
+            row.append(linear_label)
+        else:
+            row.append(str(np.random.uniform(0,1,1)[0]))
         f5.write("\t".join([str(i) for i in row]) + "\n")
     f5.close()
 
