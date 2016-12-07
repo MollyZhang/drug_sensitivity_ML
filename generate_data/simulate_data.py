@@ -4,9 +4,10 @@ simulate perfect data with linear relations as well random noise
 
 import numpy as np
 import itertools
+import train_test_split
 
 
-OUTPUT1 = ""
+
 
 def main():
     simulate(data_type="linear")
@@ -14,12 +15,12 @@ def main():
 
 
 def simulate(data_type="linear"):
-    psl_folder="../psl/data/simulation/" + data_type
+    psl_folder="../psl/data/simulation/{0}/".format(data_type)
     matrix_file = "../data/similuated_matrix_{0}.tsv".format(data_type)
-    PSL1 = psl_folder + "/drug_gene_targets.txt"
-    PSL2 = psl_folder + "/cell_gene_activity.txt"
-    PSL3 = psl_folder + "/cell_drug_sensitivity_truth.txt"
-    PSL4 = psl_folder + "/cell_drug_sensitivity_target.txt"
+    PSL1 = psl_folder + "drug_gene_targets.txt"
+    PSL2 = psl_folder + "cell_gene_activity.txt"
+    PSL3 = psl_folder + "sensitive_truth.txt"
+    PSL4 = psl_folder + "sensitive_target.txt"
 
 
     # write PSL drug targets
@@ -78,6 +79,7 @@ def simulate(data_type="linear"):
             row.append(str(np.random.uniform(0,1,1)[0]))
         f5.write("\t".join([str(i) for i in row]) + "\n")
     f5.close()
+    train_test_split.data_split(psl_folder, cv_fold=6, seed=0)
 
 
 if __name__ == "__main__":

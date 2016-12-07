@@ -10,11 +10,11 @@ from sklearn.model_selection import KFold, train_test_split
 
 
 
-DATA_PATH = "../psl/data/overlap/"
+DATA_PATH = "../psl/data/simulation/"
 
 def main():
-    data_split(DATA_PATH + "min_max/", cv_fold=6, seed=0)
-    data_split(DATA_PATH + "min_max_cuberoot/", cv_fold=6, seed=0)
+    data_split(DATA_PATH + "linear/", cv_fold=6, seed=0)
+    data_split(DATA_PATH + "random/", cv_fold=6, seed=0)
 
 
 def data_split(path, cv_fold=6, seed=0):
