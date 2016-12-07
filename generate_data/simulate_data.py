@@ -6,7 +6,8 @@ import numpy as np
 import itertools
 import train_test_split
 
-
+NUM_CELL = 100
+NUM_GENE_DRUG = 10
 
 
 def main():
@@ -25,8 +26,8 @@ def simulate(data_type="linear"):
 
     # write PSL drug targets
     with open(PSL1, "w") as f1:
-        for drug_id in range(10):
-            for gene_id in range(10):
+        for drug_id in range(NUM_GENE_DRUG):
+            for gene_id in range(NUM_GENE_DRUG):
                 if drug_id == gene_id:
                     f1.write("D{0}\tG{1}\t{2}\n".format(drug_id, gene_id, 1))
                 else:
@@ -36,9 +37,9 @@ def simulate(data_type="linear"):
     # write PSL data cell-gene activivity
     expression_level = {}
     with open(PSL2, "w") as f2:
-        for gene_id in range(10):
-            activities = np.random.uniform(0, 1, 10)
-            for cell_id in range(10):
+        for gene_id in range(NUM_GENE_DRUG):
+            activities = np.random.uniform(0, 1, NUM_CELL)
+            for cell_id in range(NUM_CELL):
                 expression_level[(cell_id, gene_id)] = activities[cell_id]
                 f2.write("C{0}\tG{1}\t{2}\n".format(cell_id, gene_id, activities[cell_id]))
     f2.close()
@@ -46,8 +47,8 @@ def simulate(data_type="linear"):
     # write PSL data cell-drug sensitivity from linear calculation of cell-gene acitivity
     f3 = open(PSL3, "w")
     f4 = open(PSL4, "w")
-    for cell_id in range(10):
-        for drug_id in range(10):
+    for cell_id in range(NUM_CELL):
+        for drug_id in range(NUM_GENE_DRUG):
             sensitivity = expression_level[(cell_id, drug_id)]
             f3.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, sensitivity))
             f4.write("C{0}\tD{1}\n".format(cell_id, drug_id))
@@ -59,16 +60,16 @@ def simulate(data_type="linear"):
     # features, gene1-10 activity in cell, gene1-10 whether targeted by drug
     f5 = open(matrix_file, "w")
     columns = ["cell-drug-pair", "cell", "drug"]
-    for gene in ["G" + str(i) for i in range(10)]:
+    for gene in ["G" + str(i) for i in range(NUM_GENE_DRUG)]:
         columns += [gene + "_targeted", gene + "_activity"]
     columns.append("sensitivity")
     f5.write("\t".join(columns) + "\n")
 
-    cell_drug_pairs = [i for i in itertools.product(range(10), repeat=2)]
+    cell_drug_pairs = [i for i in itertools.product(range(NUM_CELL), range(NUM_GENE_DRUG))]
     for cell_id, drug_id in cell_drug_pairs:
         row = ["C" + str(cell_id) + "D" + str(drug_id), "C" + str(cell_id), "D" + str(drug_id)]
         linear_label = 0
-        for gene_id in range(10):
+        for gene_id in range(NUM_GENE_DRUG):
             targeted = int(gene_id == drug_id)
             activity = expression_level[(cell_id, gene_id)]
             linear_label += targeted * activity
