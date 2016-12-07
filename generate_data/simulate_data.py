@@ -49,7 +49,10 @@ def simulate(data_type="linear"):
     f4 = open(PSL4, "w")
     for cell_id in range(NUM_CELL):
         for drug_id in range(NUM_GENE_DRUG):
-            sensitivity = expression_level[(cell_id, drug_id)]
+            if data_type == "linear":
+                sensitivity = expression_level[(cell_id, drug_id)]
+            elif data_type == "random":
+                sensitivity = np.random.uniform(0,1,1)[0]
             f3.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, sensitivity))
             f4.write("C{0}\tD{1}\n".format(cell_id, drug_id))
     f3.close()
