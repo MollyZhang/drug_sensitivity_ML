@@ -97,7 +97,7 @@ for (i=1; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/simulation/${data_type}/fold${i}_result.txt");
+    def result_file = new File("result/simulation/${data_type}/with_prior/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db1, Sensitive)) {
         for (int i=0; i<2; i++) {

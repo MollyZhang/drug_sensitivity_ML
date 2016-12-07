@@ -23,7 +23,6 @@ def simulate(data_type="linear"):
     PSL3 = psl_folder + "sensitive_truth.txt"
     PSL4 = psl_folder + "sensitive_target.txt"
 
-
     # write PSL drug targets
     with open(PSL1, "w") as f1:
         for drug_id in range(NUM_GENE_DRUG):
@@ -45,15 +44,22 @@ def simulate(data_type="linear"):
     f2.close()
     
     # write PSL data cell-drug sensitivity from linear calculation of cell-gene acitivity
+    random_sensitivity = {}
+    linear_sensitivity = {}
     f3 = open(PSL3, "w")
     f4 = open(PSL4, "w")
     for cell_id in range(NUM_CELL):
         for drug_id in range(NUM_GENE_DRUG):
+            linear_point = expression_level[(cell_id, drug_id)]
+            random_point = np.random.uniform(0,1,1)[0]
+            linear_sensitivity[(cell_id, drug_id)] = linear_point
+            random_sensitivity[(cell_id, drug_id)] = random_point
             if data_type == "linear":
-                sensitivity = expression_level[(cell_id, drug_id)]
+                f3.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, linear_point))
             elif data_type == "random":
-                sensitivity = np.random.uniform(0,1,1)[0]
-            f3.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, sensitivity))
+                f3.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, random_point))
+            else:
+                raise Exception("bad time")
             f4.write("C{0}\tD{1}\n".format(cell_id, drug_id))
     f3.close()
     f4.close()    
@@ -75,16 +81,16 @@ def simulate(data_type="linear"):
         for gene_id in range(NUM_GENE_DRUG):
             targeted = int(gene_id == drug_id)
             activity = expression_level[(cell_id, gene_id)]
-            linear_label += targeted * activity
             row += [targeted, activity] 
         if data_type == "linear":
-            row.append(linear_label)
+            row.append(linear_sensitivity[(cell_id, drug_id)])
+        elif data_type == "random":
+            row.append(random_sensitivity[(cell_id, drug_id)])
         else:
-            row.append(str(np.random.uniform(0,1,1)[0]))
+            raise Exception("bad time")
         f5.write("\t".join([str(i) for i in row]) + "\n")
     f5.close()
     train_test_split.data_split(psl_folder, cv_fold=6, seed=0)
-
 
 if __name__ == "__main__":
     main()
