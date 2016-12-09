@@ -15,7 +15,8 @@ def main():
     pass
 
 def cross_val_result(truth_folder, infer_folder):
-    rows = []
+    mse_rows = []
+    rho_rows = []
     for fold in range(1, 7):
         infer_file = "{0}fold{1}_result.txt".format(infer_folder, fold)
         truth_train_file = "{0}fold{1}_train_truth.txt".format(truth_folder, fold)
@@ -25,8 +26,9 @@ def cross_val_result(truth_folder, infer_folder):
         truth_val_df = compare_y.load_data(truth_val_file)
         train_mse, train_rho, _, _ = compare_y.calculate_accuracy(truth_train_df, infer_df)
         val_mse, val_rho, _, _ = compare_y.calculate_accuracy(truth_val_df, infer_df)
-        rows.append({"val_mse": val_mse, "val_rho": val_rho})
-    return pd.DataFrame(rows) 
+        mse_rows.append(val_mse)
+        rho_rows.append(val_rho)
+    return mse_rows, rho_rows
  
 
 def comparing_wrong_and_correct_model():
