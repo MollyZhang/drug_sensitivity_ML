@@ -46,8 +46,7 @@ for (i=1; i<= 6; i++) {
     m.add predicate: "Sensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 10
-    m.add rule: ~Sensitive(C, D), weight: 10
+    m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 100
     
     println ""
     println "Rules with initial weights:"
@@ -72,22 +71,6 @@ for (i=1; i<= 6; i++) {
     
     Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Essential] as Set, evidencePartition);
     
-    //////////////////////////// weight learning ///////////////////////////
-    Partition trueDataPartition = new Partition(2);
-    insert = data.getInserter(Sensitive, trueDataPartition)
-    InserterUtils.loadDelimitedDataTruth(insert, dir+target_dir+"fold${i}_train_truth.txt");
-    
-    Database trueDataDB = data.getDatabase(trueDataPartition, [Sensitive] as Set);
-    MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(m, db1, trueDataDB, config);
-    weightLearning.learn();
-    weightLearning.close();
-    
-    println ""
-    println "Learned model:"
-    println m
-
-    trueDataDB.close();
-    
     //////////////////////////// run inference ///////////////////////////
     MPEInference inferenceApp = new MPEInference(m, db1, config);
     inferenceApp.mpeInference();
@@ -97,7 +80,7 @@ for (i=1; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/simulation/${data_type}/with_prior/fold${i}_result.txt");
+    def result_file = new File("result/simulation/${data_type}/no_prior_no_WL/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db1, Sensitive)) {
         for (int i=0; i<2; i++) {
