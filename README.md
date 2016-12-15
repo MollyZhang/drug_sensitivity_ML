@@ -40,3 +40,14 @@ To read more about Achilles: https://portals.broadinstitute.org/achilles
     Achilles_QC_v2.4.3.rnai.Gs.percentgct
     CCLE_Expression_Entrez_2012-09-29.percentgct
     CCLE_NP24.2009_Drug_data_2015.02.24.ActAreaPercentcsv
+
+### Using locally installed maven dependencies example:
+    <dependency>
+        <groupId>edu.umd.cs</groupId>
+        <artifactId>psl-groovy</artifactId>
+        <version>2.0-SNAPSHOT</version>
+    </dependency>
+
+   Path to maven locally installed .jar file: ~/.m2/repository/edu/umd/cs/psl-groovy/2.0-SNAPSHOT/
+    
+
