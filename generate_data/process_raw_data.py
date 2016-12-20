@@ -7,8 +7,8 @@ import os
 from scipy import stats
 from pprint import pprint as pp
 from sklearn import preprocessing
-import train_test_split
 
+import train_test_split
 
 
 FOLDER = "../psl/data/master_data_{0}/"
@@ -21,7 +21,7 @@ SENSITIVE = "../raw_data/CCLE_NP24.2009_Drug_data_2015.02.24.ActArea.{0}.csv"
 
 def main():
     #convert_all_data(scaling="percent")    
-    collect_overlapping_subset(subsets=["active", "essential"], scaling="percent")
+    collect_overlapping_subset(subsets=["essential"], scaling="percent")
 
 
 def collect_overlapping_subset(subsets=[], scaling=""):
@@ -39,36 +39,44 @@ def collect_overlapping_subset(subsets=[], scaling=""):
     drugs = set(drug_target_df[drug_target_df[1].isin(genes)][0])
    
     # filter and save
-    output_folder = input_folder + "_".join(subsets) + "_overlap/"
+    out_folder = input_folder + "_".join(subsets) + "_overlap/"
     try: 
-        subprocess.call(["rm", "-rf", output_folder])
-        os.mkdir(output_folder)
+        subprocess.call(["rm", "-rf", out_folder])
+        os.mkdir(out_folder)
     except OSError:
         raise Exception("bad time")
  
-    label_df = label_df[label_df[0].isin(cells)]
-    label_df = label_df[label_df[1].isin(drugs)]
-    label_df.to_csv(output_folder + "sensitive_truth.txt", sep="\t", index=None, header=None)
-    label_df[[0,1]].to_csv(output_folder + "sensitive_target.txt", sep="\t", index=None, header=None)
+    label_df = label_df[label_df[0].isin(cells) & label_df[1].isin(drugs)]
+    label_df.to_csv(out_folder + "sensitive_truth.txt", sep="\t", index=None, header=None)
+    label_df[[0,1]].to_csv(out_folder + "sensitive_target.txt", sep="\t", index=None, header=None)
     
-    drug_target_df = drug_target_df[drug_target_df[0].isin(drugs)]
-    drug_target_df = drug_target_df[drug_target_df[1].isin(genes)]
-    drug_target_df.to_csv(output_folder + "drug_target.txt", sep="\t", index=None, header=None)
+    drug_target_df = drug_target_df[drug_target_df[0].isin(drugs) & drug_target_df[1].isin(genes)]
+    drug_target_df.to_csv(out_folder + "drug_target.txt", sep="\t", index=None, header=None)
  
-    for predicate_name, predicate_set in zip(["cell", "drug", "gene"], [cells, drugs, genes]):
-        predicate_df = pd.read_csv(input_folder + "{0}.txt".format(predicate_name), 
-                                   delimiter="\t", header=None)
-        predicate_df = predicate_df[predicate_df[0].isin(predicate_set)]
-        predicate_df.to_csv(output_folder + "{0}.txt".format(predicate_name), 
-                            sep="\t", index=None, header=None)
+    for p_name, p_set in zip(["cell", "drug", "gene"], [cells, drugs, genes]):
+        p_df = pd.read_csv(input_folder + "{0}.txt".format(p_name), delimiter="\t", header=None)
+        p_df = p_df[p_df[0].isin(p_set)]
+        p_df.to_csv(out_folder + "{0}.txt".format(p_name), sep="\t", index=None, header=None)
 
     for subset_name, subset_df in dfs.iteritems():
-        subset_df = subset_df[subset_df[0].isin(cells)]
-        subset_df = subset_df[subset_df[1].isin(genes)]
-        subset_df.to_csv(output_folder + "{0}.txt".format(subset_name), 
-                         sep="\t", index=None, header=None)
-    train_test_split.data_split(output_folder, cv_fold=6, seed=0)
+        subset_df = subset_df[subset_df[0].isin(cells) & subset_df[1].isin(genes)]
+        subset_df.to_csv(out_folder + "{0}.txt".format(subset_name), sep="\t", index=None, header=None)
+        dfs[subset_name] = subset_df.copy() 
+    train_test_split.data_split(out_folder, cv_fold=6, seed=0)
 
+    # compile matrix
+    matrix_df = label_df.copy()
+    matrix_df.columns = ["cell", "drug", "sensitivity"]
+    matrix_df["cell-drug-pair"] = matrix_df[['cell', 'drug']].apply(lambda x: ''.join(x), axis=1)
+    for gene in genes:
+        drugs_targeting_gene = list(drug_target_df[drug_target_df[1]==gene][0])
+        matrix_df[gene + "_targeted"] = matrix_df["drug"].isin(drugs_targeting_gene).apply(lambda x: int(x))
+        for subset_name, subset_df in dfs.iteritems():
+            subset_df = subset_df[subset_df[1]==gene][[0,2]]
+            subset_df.columns = ["cell", gene + "_" + subset_name]
+            matrix_df = pd.merge(matrix_df, subset_df, on='cell') 
+    matrix_df.to_csv("../data/data_table_{0}_{1}_overlap.tsv".format(scaling, "_".join(subsets)), 
+                     sep="\t", index=None)
 
 
 def convert_all_data(scaling="percent"):
