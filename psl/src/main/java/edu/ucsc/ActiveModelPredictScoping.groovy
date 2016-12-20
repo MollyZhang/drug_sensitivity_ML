@@ -46,15 +46,13 @@ for (i=1; i<= nfold; i++) {
     m.add predicate: "Gene",         types: [ArgumentType.UniqueID, ArgumentType.String]
     m.add predicate: "Cell",         types: [ArgumentType.UniqueID, ArgumentType.String]
     m.add predicate: "DrugTarget",   types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-    m.add predicate: "Essential",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "Active",       types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "Sensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "ToPredict",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    m.add rule : ( ToPredict(C, D) & DrugTarget(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
-    m.add rule : ( ToPredict(C, D) & DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 5
-    m.add rule: ~Sensitive(C, D), weight: 2
+    m.add rule : ( ToPredict(C, D) & DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 100
+    m.add rule: ~Sensitive(C, D), weight: 100 
     
     println ""
     println "Rules with initial weights:"
@@ -77,9 +75,6 @@ for (i=1; i<= nfold; i++) {
     
     insert = data.getInserter(DrugTarget, evidencePartition);
     InserterUtils.loadDelimitedData(insert, dir+"drug_target.txt");
-    
-    insert = data.getInserter(Essential, evidencePartition);
-    InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
     
     insert = data.getInserter(Active, evidencePartition);
     InserterUtils.loadDelimitedDataTruth(insert, dir+"active.txt");
