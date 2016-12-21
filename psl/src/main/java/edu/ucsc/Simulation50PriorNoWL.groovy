@@ -70,7 +70,7 @@ for (i=1; i<= 6; i++) {
     insert = data.getInserter(Sensitive, trainTargetPartition);
     InserterUtils.loadDelimitedData(insert, dir+"sensitive_target.txt");
     
-    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Essential] as Set, evidencePartition);
+    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Active] as Set, evidencePartition);
     
     //////////////////////////// run inference ///////////////////////////
     MPEInference inferenceApp = new MPEInference(m, db1, config);

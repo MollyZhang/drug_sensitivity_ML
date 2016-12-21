@@ -42,12 +42,23 @@ for (i=1; i<= 6; i++) {
     
     ////////////////////////// predicate declaration ////////////////////////
     m.add predicate: "DrugTarget",   types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-    m.add predicate: "Active",       types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+    m.add predicate: "Essential",       types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "Sensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+    m.add predicate: "ToPredict",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 100
-    m.add rule : ~Sensitive(C, D),  weight : 1
+    def File geneFile = new File(this.args[0] + "gene.txt")
+    def genes = []
+    for (line in geneFile.readLines()) {
+        genes << line.split("\t")[0]
+    }
+
+    def geneArg;
+    for( String gene : genes ){
+        geneArg = data.getUniqueID(gene);
+        m.add rule : ( ToPredict(C, D) & DrugTarget(D, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, D),  weight : 100
+    }
+    m.add rule : ~Sensitive(C, D),  weight : 100
     
     println ""
     println "Rules with initial weights:"
@@ -60,35 +71,73 @@ for (i=1; i<= 6; i++) {
     def evidencePartition = new Partition(0);
     
     insert = data.getInserter(DrugTarget, evidencePartition);
-    InserterUtils.loadDelimitedDataTruth(insert, dir+"drug_gene_targets.txt");
+    InserterUtils.loadDelimitedData(insert, dir+"drug_target.txt");
     
-    insert = data.getInserter(Active, evidencePartition);
-    InserterUtils.loadDelimitedDataTruth(insert, dir+"cell_gene_activity.txt");
-    
+    insert = data.getInserter(Essential, evidencePartition);
+    InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
+   
+    insert = data.getInserter(ToPredict, evidencePartition);
+    InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_train_to_predict.txt");
+ 
     // add target atoms
     def trainTargetPartition = new Partition(1);
     insert = data.getInserter(Sensitive, trainTargetPartition);
-    InserterUtils.loadDelimitedData(insert, dir+"sensitive_target.txt");
+    InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_train_to_predict.txt");
+ 
+
+    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Essential, ToPredict] as Set, evidencePartition);
     
-    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Essential] as Set, evidencePartition);
+    //////////////////////////// weight learning ///////////////////////////
+    Partition trueDataPartition = new Partition(2);
+    insert = data.getInserter(Sensitive, trueDataPartition)
+    InserterUtils.loadDelimitedDataTruth(insert, dir+target_dir+"fold${i}_train_truth.txt");
     
-    //////////////////////////// run inference ///////////////////////////
-    MPEInference inferenceApp = new MPEInference(m, db1, config);
-    inferenceApp.mpeInference();
-    inferenceApp.close();
+    Database trueDataDB = data.getDatabase(trueDataPartition, [Sensitive] as Set);
+    MaxLikelihoodMPE weightLearning = new MaxLikelihoodMPE(m, db1, trueDataDB, config);
+    weightLearning.learn();
+    weightLearning.close();
     
+    println ""
+    println "Learned model:"
+    println m
+
+    trueDataDB.close();
+        
+    //////////////////////////// run inference with test data///////////////////////////
+    def testEvidencePartition = new Partition(4);
+
+    insert = data.getInserter(DrugTarget, testEvidencePartition);
+    InserterUtils.loadDelimitedData(insert, dir+"drug_target.txt");
+
+    insert = data.getInserter(Essential, testEvidencePartition);
+    InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
+
+    insert = data.getInserter(ToPredict, testEvidencePartition);
+    InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_val_to_predict.txt");
+
+    // add target atoms
+    def testTargetPartition = new Partition(5);
+    insert = data.getInserter(Sensitive, testTargetPartition);
+    InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_val_to_predict.txt");
+
+    Database db2 = data.getDatabase(testTargetPartition, [DrugTarget, Essential, ToPredict] as Set, testEvidencePartition);
+
+    MPEInference inferenceApp2 = new MPEInference(m, db2, config);
+    inferenceApp2.mpeInference();
+    inferenceApp2.close();
+
     println "saving inference results to result/"
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/simulation/${data_type}/yes_prior_no_WL/fold${i}_result.txt");
+    def result_file = new File("result/essential_overlap/gene_specific_rule/fold${i}_result.txt");
     result_file.write ""
-    for (GroundAtom atom : Queries.getAllAtoms(db1, Sensitive)) {
+    for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {
             result_file << atom.arguments[i].toString() + "\t"
         }
         result_file << formatter.format(atom.getValue()) + "\n"}
     
     // close the Databases to flush writes
-    db1.close();
+    db2.close();
 }

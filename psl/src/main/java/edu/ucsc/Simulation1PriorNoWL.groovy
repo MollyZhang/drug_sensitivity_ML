@@ -47,6 +47,7 @@ for (i=1; i<= 6; i++) {
     
     ///////////////////////////// rules ////////////////////////////////////
     m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 100
+    m.add rule : ~Sensitive(C, D),  weight : 1
     
     println ""
     println "Rules with initial weights:"
@@ -69,7 +70,7 @@ for (i=1; i<= 6; i++) {
     insert = data.getInserter(Sensitive, trainTargetPartition);
     InserterUtils.loadDelimitedData(insert, dir+"sensitive_target.txt");
     
-    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Essential] as Set, evidencePartition);
+    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Active] as Set, evidencePartition);
     
     //////////////////////////// run inference ///////////////////////////
     MPEInference inferenceApp = new MPEInference(m, db1, config);
@@ -80,7 +81,7 @@ for (i=1; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/simulation/${data_type}/no_prior_no_WL/fold${i}_result.txt");
+    def result_file = new File("result/simulation/${data_type}/yes_prior_no_WL/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db1, Sensitive)) {
         for (int i=0; i<2; i++) {

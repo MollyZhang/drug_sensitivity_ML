@@ -46,8 +46,8 @@ for (i=1; i<= 6; i++) {
     m.add predicate: "Sensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 10
-    m.add rule : ~Sensitive(C, D),  weight : 10
+    m.add rule : ( DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 100
+    m.add rule : ~Sensitive(C, D),  weight : 100
     
     println ""
     println "Rules with initial weights:"
@@ -75,7 +75,7 @@ for (i=1; i<= 6; i++) {
     insert = data.getInserter(Sensitive, trainTargetPartition2);
     InserterUtils.loadDelimitedData(insert, dir+"sensitive_target.txt");
 
-    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Essential] as Set, evidencePartition);
+    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Active] as Set, evidencePartition);
     
     //////////////////////////// weight learning ///////////////////////////
     Partition trueDataPartition = new Partition(2);

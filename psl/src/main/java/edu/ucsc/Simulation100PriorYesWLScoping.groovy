@@ -75,7 +75,7 @@ for (i=1; i<= 6; i++) {
     InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_train_to_predict.txt");
  
 
-    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Essential] as Set, evidencePartition);
+    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Active] as Set, evidencePartition);
     
     //////////////////////////// weight learning ///////////////////////////
     Partition trueDataPartition = new Partition(2);
