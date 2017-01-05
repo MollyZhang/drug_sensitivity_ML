@@ -52,11 +52,21 @@ for (i=1; i<= 6; i++) {
     for (line in geneFile.readLines()) {
         genes << line.split("\t")[0]
     }
+    
+    def File drugFile = new File(this.args[0] + "drug.txt")
+    def drugs = []
+    for (line in drugFile.readLines()) {
+        drugs << line.split("\t")[0]
+    }
 
     def geneArg;
+    def drugArg;
     for( String gene : genes ){
         geneArg = data.getUniqueID(gene);
-        m.add rule : ( ToPredict(C, D) & DrugTarget(D, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, D),  weight : 100
+        for (String drug : drugs ){
+            drugArg = data.getUniqueID(drug);
+            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 100
+        }
     }
     m.add rule : ~Sensitive(C, D),  weight : 100
     
@@ -130,7 +140,7 @@ for (i=1; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/essential_overlap/gene_specific_rule_200k_iterations/fold${i}_result.txt");
+    def result_file = new File("result/essential_overlap/gene_drug_specific_rule_100k_iters/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {

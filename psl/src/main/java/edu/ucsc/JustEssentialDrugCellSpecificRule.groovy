@@ -47,16 +47,26 @@ for (i=1; i<= 6; i++) {
     m.add predicate: "ToPredict",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    def File geneFile = new File(this.args[0] + "gene.txt")
-    def genes = []
-    for (line in geneFile.readLines()) {
-        genes << line.split("\t")[0]
+    def File cellFile = new File(this.args[0] + "cell.txt")
+    def cells = []
+    for (line in cellFile.readLines()) {
+        cells << line.split("\t")[0]
+    }
+    
+    def File drugFile = new File(this.args[0] + "drug.txt")
+    def drugs = []
+    for (line in drugFile.readLines()) {
+        drugs << line.split("\t")[0]
     }
 
-    def geneArg;
-    for( String gene : genes ){
-        geneArg = data.getUniqueID(gene);
-        m.add rule : ( ToPredict(C, D) & DrugTarget(D, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, D),  weight : 100
+    def cellArg;
+    def drugArg
+    for (String cell : cells ) {
+        cellArg = data.getUniqueID(cell);
+        for (String drug : drugs) {
+            drugArg = data.getUniqueID(drug);
+            m.add rule : ( ToPredict(cellArg, drugArg) & DrugTarget(drugArg, G) & Essential(cellArg, G) ) >> Sensitive(cellArg, drugArg),  weight : 100
+        }
     }
     m.add rule : ~Sensitive(C, D),  weight : 100
     
@@ -130,7 +140,7 @@ for (i=1; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/essential_overlap/gene_specific_rule_200k_iterations/fold${i}_result.txt");
+    def result_file = new File("result/essential_overlap/drug_cell_specific_rule/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {
