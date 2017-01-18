@@ -47,8 +47,8 @@ for (i=1; i<= 6; i++) {
     m.add predicate: "ToPredict",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    m.add rule : ( ToPredict(C, D) & DrugTarget(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 10
-    m.add rule : ~Sensitive(C, D),  weight : 10
+    m.add rule : ( ToPredict(C, D) & DrugTarget(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 100, squared: false
+    m.add rule : ~Sensitive(C, D),  weight : 100
     
     println ""
     println "Rules with initial weights:"
@@ -120,7 +120,7 @@ for (i=1; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/essential_overlap/weight_1_iters_100_lr_100/general_rule_squared/fold${i}_result.txt");
+    def result_file = new File("result/essential_overlap/general_rule_not_squared/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {
