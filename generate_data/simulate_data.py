@@ -15,71 +15,91 @@ def main():
     simulate(data_type="random")
 
 
-def simulate(data_type="linear"):
+def simulate(data_type="linear", multiple_drug_target=False):
     psl_folder="../psl/data/simulation/{0}/".format(data_type)
     matrix_file = "../data/similuated_matrix_{0}.tsv".format(data_type)
     PSL1 = psl_folder + "drug_gene_targets.txt"
     PSL2 = psl_folder + "cell_gene_activity.txt"
     PSL3 = psl_folder + "sensitive_truth.txt"
     PSL4 = psl_folder + "sensitive_target.txt"
+    
+    drug_target = write_drug_target(PSL1, multiple_drug_target)
+    expression_level = write_gene_activity(PSL2)
+    linear_sensitivity, random_sensitivity = write_sensitivity(PS3, PS4, data_type, expression_level, drug_target)
+    compile_data_matrix(matrix_file, drug_target, expression_level, linear_sensitivity, random_sensitivity)
+    train_test_split.data_split(psl_folder, cv_fold=6, seed=0)
 
-    # write PSL drug targets
-    with open(PSL1, "w") as f1:
+def write_drug_target(filename, multiple_drug_target):
+    drug_target = {}
+    f = open(filename, "w")
+    if multiple_drug_target:
+        pass
+    else:
         for drug_id in range(NUM_GENE_DRUG):
             for gene_id in range(NUM_GENE_DRUG):
                 if drug_id == gene_id:
-                    f1.write("D{0}\tG{1}\t{2}\n".format(drug_id, gene_id, 1))
+                    drug_target{drug_id} = [gene_id]
+                    f.write("D{0}\tG{1}\t{2}\n".format(drug_id, gene_id, 1))
                 else:
-                    f1.write("D{0}\tG{1}\t{2}\n".format(drug_id, gene_id, 0))
-    f1.close()
+                    f.write("D{0}\tG{1}\t{2}\n".format(drug_id, gene_id, 0))
+    f.close()
+    return drug_target 
 
-    # write PSL data cell-gene activivity
+
+def write_gene_acitivity(filename):
     expression_level = {}
-    with open(PSL2, "w") as f2:
+    with open(filename, "w") as f:
         for gene_id in range(NUM_GENE_DRUG):
             activities = np.random.uniform(0, 1, NUM_CELL)
             for cell_id in range(NUM_CELL):
                 expression_level[(cell_id, gene_id)] = activities[cell_id]
-                f2.write("C{0}\tG{1}\t{2}\n".format(cell_id, gene_id, activities[cell_id]))
-    f2.close()
-    
-    # write PSL data cell-drug sensitivity from linear calculation of cell-gene acitivity
+                f.write("C{0}\tG{1}\t{2}\n".format(cell_id, gene_id, activities[cell_id]))
+    f.close()
+    return expression_level
+
+
+def write_sensitivity(filename1, filename2, data_type, expression_level, drug_target) 
     random_sensitivity = {}
     linear_sensitivity = {}
-    f3 = open(PSL3, "w")
-    f4 = open(PSL4, "w")
+    f_truth = open(filename1, "w")
+    f_target = open(filename2, "w")
     for cell_id in range(NUM_CELL):
         for drug_id in range(NUM_GENE_DRUG):
-            linear_point = expression_level[(cell_id, drug_id)]
+            average_gene_level = np.mean([expression_level[(cell_id, gene_id)] 
+                                          for gene_id in drug_target[drug_id]])
             random_point = np.random.uniform(0,1,1)[0]
-            linear_sensitivity[(cell_id, drug_id)] = linear_point
+            linear_sensitivity[(cell_id, drug_id)] = average_gene_level 
             random_sensitivity[(cell_id, drug_id)] = random_point
             if data_type == "linear":
-                f3.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, linear_point))
+                f_truth.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, average_gene_level))
             elif data_type == "random":
-                f3.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, random_point))
+                f_truth.write("C{0}\tD{1}\t{2}\n".format(cell_id, drug_id, random_point))
             else:
                 raise Exception("bad time")
-            f4.write("C{0}\tD{1}\n".format(cell_id, drug_id))
-    f3.close()
-    f4.close()    
+            f_target.write("C{0}\tD{1}\n".format(cell_id, drug_id))
+    f_truth.close()
+    f_target.close()    
+    return linear_sensitivity, random_sensitivity
 
-    # compile PSL data into data matrix for other ML methods
-    # rows label: cell-drug sensitivity
-    # features, gene1-10 activity in cell, gene1-10 whether targeted by drug
-    f5 = open(matrix_file, "w")
+
+def compile_data_matrix(matrix_file, drug_target, expression_level, linear_sensitivity, random_sensitivity)
+    """ rows label: cell-drug sensitivity
+        features, gene1-10 activity in cell, gene1-10 whether targeted by drug """
+
+    # write header/column name
+    f = open(matrix_file, "w")
     columns = ["cell-drug-pair", "cell", "drug"]
     for gene in ["G" + str(i) for i in range(NUM_GENE_DRUG)]:
         columns += [gene + "_targeted", gene + "_activity"]
     columns.append("sensitivity")
-    f5.write("\t".join(columns) + "\n")
+    f.write("\t".join(columns) + "\n")
 
     cell_drug_pairs = [i for i in itertools.product(range(NUM_CELL), range(NUM_GENE_DRUG))]
     for cell_id, drug_id in cell_drug_pairs:
         row = ["C" + str(cell_id) + "D" + str(drug_id), "C" + str(cell_id), "D" + str(drug_id)]
         linear_label = 0
         for gene_id in range(NUM_GENE_DRUG):
-            targeted = int(gene_id == drug_id)
+            targeted = int(gene_id in drug_target[drug_id])
             activity = expression_level[(cell_id, gene_id)]
             row += [targeted, activity] 
         if data_type == "linear":
@@ -88,9 +108,9 @@ def simulate(data_type="linear"):
             row.append(random_sensitivity[(cell_id, drug_id)])
         else:
             raise Exception("bad time")
-        f5.write("\t".join([str(i) for i in row]) + "\n")
-    f5.close()
-    train_test_split.data_split(psl_folder, cv_fold=6, seed=0)
+        f.write("\t".join([str(i) for i in row]) + "\n")
+    f.close()
+
 
 if __name__ == "__main__":
     main()
