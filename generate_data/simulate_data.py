@@ -25,8 +25,8 @@ def simulate(data_type="linear", multiple_drug_target=False):
     
     drug_target = write_drug_target(PSL1, multiple_drug_target)
     expression_level = write_gene_activity(PSL2)
-    linear_sensitivity, random_sensitivity = write_sensitivity(PS3, PS4, data_type, expression_level, drug_target)
-    compile_data_matrix(matrix_file, drug_target, expression_level, linear_sensitivity, random_sensitivity)
+    linear_sensitivity, random_sensitivity = write_sensitivity(PSL3, PSL4, data_type, expression_level, drug_target)
+    compile_data_matrix(matrix_file, drug_target, data_type, expression_level, linear_sensitivity, random_sensitivity)
     train_test_split.data_split(psl_folder, cv_fold=6, seed=0)
 
 def write_drug_target(filename, multiple_drug_target):
@@ -38,7 +38,7 @@ def write_drug_target(filename, multiple_drug_target):
         for drug_id in range(NUM_GENE_DRUG):
             for gene_id in range(NUM_GENE_DRUG):
                 if drug_id == gene_id:
-                    drug_target{drug_id} = [gene_id]
+                    drug_target[drug_id] = [gene_id]
                     f.write("D{0}\tG{1}\t{2}\n".format(drug_id, gene_id, 1))
                 else:
                     f.write("D{0}\tG{1}\t{2}\n".format(drug_id, gene_id, 0))
@@ -46,7 +46,7 @@ def write_drug_target(filename, multiple_drug_target):
     return drug_target 
 
 
-def write_gene_acitivity(filename):
+def write_gene_activity(filename):
     expression_level = {}
     with open(filename, "w") as f:
         for gene_id in range(NUM_GENE_DRUG):
@@ -58,7 +58,7 @@ def write_gene_acitivity(filename):
     return expression_level
 
 
-def write_sensitivity(filename1, filename2, data_type, expression_level, drug_target) 
+def write_sensitivity(filename1, filename2, data_type, expression_level, drug_target): 
     random_sensitivity = {}
     linear_sensitivity = {}
     f_truth = open(filename1, "w")
@@ -82,7 +82,7 @@ def write_sensitivity(filename1, filename2, data_type, expression_level, drug_ta
     return linear_sensitivity, random_sensitivity
 
 
-def compile_data_matrix(matrix_file, drug_target, expression_level, linear_sensitivity, random_sensitivity)
+def compile_data_matrix(matrix_file, drug_target, data_type, expression_level, linear_sensitivity, random_sensitivity):
     """ rows label: cell-drug sensitivity
         features, gene1-10 activity in cell, gene1-10 whether targeted by drug """
 
