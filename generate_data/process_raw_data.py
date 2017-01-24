@@ -20,7 +20,7 @@ SENSITIVE = "../raw_data/CCLE_NP24.2009_Drug_data_2015.02.24.ActArea.{0}.csv"
 
 
 def main():
-    #convert_all_data(scaling="percent")    
+    convert_all_data(scaling="percent")    
     collect_overlapping_subset(subsets=["essential"], scaling="percent")
 
 
@@ -88,6 +88,7 @@ def convert_all_data(scaling="percent"):
     cells = sensitive(drugs, output=output, scaling=scaling)
     cells = active_and_essential(cells, genes, predicate="active", output=output, scaling=scaling)
     cells = active_and_essential(cells, genes, predicate="essential", output=output, scaling=scaling)
+    tissue(cells, output=output)
     train_test_split.data_split(output, cv_fold=6, seed=0)
 
 
@@ -113,35 +114,23 @@ def sensitive(drugs, output="", scaling=""):
     return cells
 
 
-def tissue(cell_keys):
-    print "generate tissue.txt and is_tissue.txt"
-    tissues = []
-    for name, key in cell_keys.iteritems():
-        tissue = "_".join(name.split("_")[1:])
+def tissue(cells, output=""):
+    tissues = {}
+    f_tissue = open(output + "tissue.txt", "w") 
+    f_is_tissue = open(output + "is_tissue.txt", "w") 
+    for cell_name, cell_key in cells.iteritems():
+        tissue = "_".join(cell_name.split("_")[1:])
         if tissue == "": # some cell lines doesn't have a tissue name
-            continue 
+            tissue = "none" 
         elif tissue == "LUNG.1":
             tissue = tissue[:-2]
-        tissues.append(tissue)
-    tissues = sorted(list(set(tissues)))
-    tissue_keys = {}
-    with open(DATA_FOLDER + "tissue.txt", "w") as f:
-        for i, tissue in enumerate(tissues):
-            key = "T" + str(i)
-            tissue_keys[tissue] = key
-            f.write("{0}\t{1}\n".format(key, tissue))
-        f.close()
-
-    print "generate is_tissue.txt"
-    f = open(DATA_FOLDER + "is_tissue.txt", "w")
-    for name, key in cell_keys.iteritems():
-        tissue = "_".join(name.split("_")[1:])
-        if tissue == "": # some cell lines doesn't have a tissue name
-            continue 
-        elif tissue == "LUNG.1":
-            tissue = tissue[:-2]
-        f.write("{0}\t{1}\n".format(cell_keys[name], tissue_keys[tissue]))
-    f.close()
+        if tissue not in tissues.keys():
+            tissue_key = "T" + str(len(tissues))
+            tissues[tissue] = tissue_key 
+            f_tissue.write("{0}\t{1}\n".format(tissue_key, tissue))
+        f_is_tissue.write("{0}\t{1}\n".format(cell_key, tissues[tissue]))
+    f_tissue.close()
+    f_is_tissue.close()
 
 
 def drug_target(output, scaling="", write=True):

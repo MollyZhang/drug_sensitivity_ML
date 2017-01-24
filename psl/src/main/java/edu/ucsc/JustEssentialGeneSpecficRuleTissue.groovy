@@ -30,7 +30,6 @@ import edu.umd.cs.psl.evaluation.statistics.*;
 
 
 for (i=1; i<= 6; i++) {
-    println "fold ${i}"
     ////////////////////////// initial setup ////////////////////////
     ConfigManager cm = ConfigManager.getManager()
     ConfigBundle config = cm.getBundle("first-model")
@@ -45,14 +44,39 @@ for (i=1; i<= 6; i++) {
     m.add predicate: "Essential",       types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "Sensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "ToPredict",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+    m.add predicate: "IsTissue",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    m.add rule : ( ToPredict(C, D) & DrugTarget(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 1, squared: false
-    m.add rule : ~Sensitive(C, D),  weight : 1
+    def File geneFile = new File(this.args[0] + "gene.txt")
+    def genes = []
+    for (line in geneFile.readLines()) {
+        genes << line.split("\t")[0]
+    }
+
+    def File tissueFile = new File(this.args[0] + "tissue.txt")
+    def tissues = []
+    for (line in tissueFile.readLines()) {
+        tissues << line.split("\t")[0]
+    }
+
+    def geneArg;
+    def tissueArg;
+    for( String gene : genes ){
+        geneArg = data.getUniqueID(gene);
+        m.add rule : ( ToPredict(C, D) & DrugTarget(D, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, D),  weight : 1, squared: false
+        m.add rule : ( ToPredict(C, D) & ~DrugTarget(D, geneArg) & Essential(C, geneArg) ) >> ~Sensitive(C, D),  weight : 1, squared: false
+        m.add rule : ( ToPredict(C, D) & DrugTarget(D, geneArg) & ~Essential(C, geneArg) ) >> ~Sensitive(C, D),  weight : 1, squared: false
+        m.add rule : ( ToPredict(C, D) & ~DrugTarget(D, geneArg) & ~Essential(C, geneArg) ) >> ~Sensitive(C, D),  weight : 1, squared: false
+    }
+
+    m.add rule : ( Sensitive(C1, D) & IsTissue(C1, T) & IsTissue(C2, T) ) >> Sensitive(C2, D),  weight : 1, squared: false
+
+    m.add rule : ~sensitive(C, D),  weight : 1
     
     println ""
     println "Rules with initial weights:"
     println m;
+    println "fold ${i}"
     
     //////////////////////////// data setup ///////////////////////////
     // loads data
@@ -120,7 +144,7 @@ for (i=1; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/essential_overlap/general_rule_not_squared/fold${i}_result.txt");
+    def result_file = new File("result/essential_overlap/gene_specific_rule_tissue/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {

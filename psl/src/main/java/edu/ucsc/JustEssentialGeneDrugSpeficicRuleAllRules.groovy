@@ -29,8 +29,7 @@ import edu.umd.cs.psl.util.database.Queries;
 import edu.umd.cs.psl.evaluation.statistics.*;
 
 
-for (i=1; i<= 6; i++) {
-    println "fold ${i}"
+for (i=6; i<= 6; i++) {
     ////////////////////////// initial setup ////////////////////////
     ConfigManager cm = ConfigManager.getManager()
     ConfigBundle config = cm.getBundle("first-model")
@@ -42,17 +41,44 @@ for (i=1; i<= 6; i++) {
     
     ////////////////////////// predicate declaration ////////////////////////
     m.add predicate: "DrugTarget",   types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-    m.add predicate: "Essential",       types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+    m.add predicate: "Essential",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "Sensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "ToPredict",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    m.add rule : ( ToPredict(C, D) & DrugTarget(D, G) & Essential(C, G) ) >> Sensitive(C, D),  weight : 1, squared: false
-    m.add rule : ~Sensitive(C, D),  weight : 1
+    def File geneFile = new File(this.args[0] + "gene.txt")
+    def genes = []
+    for (line in geneFile.readLines()) {
+        genes << line.split("\t")[0]
+    }
+    
+    def File drugFile = new File(this.args[0] + "drug.txt")
+    def drugs = []
+    for (line in drugFile.readLines()) {
+        drugs << line.split("\t")[0]
+    }
+
+    def geneArg;
+    def drugArg;
+    for( String gene : genes ){
+        geneArg = data.getUniqueID(gene);
+        for (String drug : drugs ){
+            drugArg = data.getUniqueID(drug);
+            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
+            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
+            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
+            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
+            m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
+            m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
+            m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
+            m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
+        }
+    }
     
     println ""
     println "Rules with initial weights:"
     println m;
+    println "fold ${i}"
     
     //////////////////////////// data setup ///////////////////////////
     // loads data
@@ -120,7 +146,7 @@ for (i=1; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/essential_overlap/general_rule_not_squared/fold${i}_result.txt");
+    def result_file = new File("result/essential_overlap/gene_drug_specific_rule_all_rules/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {
