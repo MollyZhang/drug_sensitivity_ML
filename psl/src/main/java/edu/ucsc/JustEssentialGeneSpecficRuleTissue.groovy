@@ -69,7 +69,7 @@ for (i=1; i<= 6; i++) {
         m.add rule : ( ToPredict(C, D) & ~DrugTarget(D, geneArg) & ~Essential(C, geneArg) ) >> ~Sensitive(C, D),  weight : 1, squared: false
     }
 
-    m.add rule : ( Sensitive(C1, D) & IsTissue(C1, T) & IsTissue(C2, T) ) >> Sensitive(C2, D),  weight : 1, squared: false
+    m.add rule : ( Sensitive(C1, D) & IsTissue(C1, T) & IsTissue(C2, T) & (C1-C2) ) >> Sensitive(C2, D),  weight : 1, squared: false
 
     m.add rule : ~sensitive(C, D),  weight : 1
     

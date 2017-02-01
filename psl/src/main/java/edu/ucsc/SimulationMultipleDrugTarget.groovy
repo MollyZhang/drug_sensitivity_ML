@@ -29,10 +29,13 @@ import edu.umd.cs.psl.util.database.Queries;
 import edu.umd.cs.psl.evaluation.statistics.*;
 
 
-for (i=6; i<= 6; i++) {
+def result_folder = "result/simulation/"
+
+for (i=1; i<= 6; i++) {
+    println "fold ${i}"
     ////////////////////////// initial setup ////////////////////////
     ConfigManager cm = ConfigManager.getManager()
-    ConfigBundle config = cm.getBundle("first-model")
+    ConfigBundle config = cm.getBundle("simulation")
     
     def defaultPath = System.getProperty("java.io.tmpdir")
     String dbpath = config.getString("dbpath", defaultPath + File.separator + "first-model")
@@ -41,47 +44,17 @@ for (i=6; i<= 6; i++) {
     
     ////////////////////////// predicate declaration ////////////////////////
     m.add predicate: "DrugTarget",   types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-    m.add predicate: "Essential",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
+    m.add predicate: "Active",       types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "Sensitive",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     m.add predicate: "ToPredict",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
-    m.add predicate: "IsTissue",    types: [ArgumentType.UniqueID, ArgumentType.UniqueID]
     
     ///////////////////////////// rules ////////////////////////////////////
-    def File geneFile = new File(this.args[0] + "gene.txt")
-    def genes = []
-    for (line in geneFile.readLines()) {
-        genes << line.split("\t")[0]
-    }
-    
-    def File drugFile = new File(this.args[0] + "drug.txt")
-    def drugs = []
-    for (line in drugFile.readLines()) {
-        drugs << line.split("\t")[0]
-    }
-
-    def geneArg;
-    def drugArg;
-    for( String gene : genes ){
-        geneArg = data.getUniqueID(gene);
-        for (String drug : drugs ){
-            drugArg = data.getUniqueID(drug);
-            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
-            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
-            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
-            m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
-            m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
-            m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
-            m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
-            m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
-        }
-    }
-    m.add rule : ( Sensitive(C1, D) & IsTissue(C1, T) & IsTissue(C2, T) & (C1-C2) ) >> Sensitive(C2, D),  weight : 1, squared: false
-
+    m.add rule : ( ToPredict(C, D) & DrugTarget(D, G) & Active(C, G) ) >> Sensitive(C, D),  weight : 1, squared: false;
+    m.add rule : ~Sensitive(C, D),  weight : 1
     
     println ""
     println "Rules with initial weights:"
     println m;
-    println "fold ${i}"
     
     //////////////////////////// data setup ///////////////////////////
     // loads data
@@ -90,10 +63,10 @@ for (i=6; i<= 6; i++) {
     def evidencePartition = new Partition(0);
     
     insert = data.getInserter(DrugTarget, evidencePartition);
-    InserterUtils.loadDelimitedData(insert, dir+"drug_target.txt");
+    InserterUtils.loadDelimitedData(insert, dir+"drug_gene_targets.txt");
     
-    insert = data.getInserter(Essential, evidencePartition);
-    InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
+    insert = data.getInserter(Active, evidencePartition);
+    InserterUtils.loadDelimitedDataTruth(insert, dir+"cell_gene_activity.txt");
    
     insert = data.getInserter(ToPredict, evidencePartition);
     InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_train_to_predict.txt");
@@ -104,7 +77,7 @@ for (i=6; i<= 6; i++) {
     InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_train_to_predict.txt");
  
 
-    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Essential, ToPredict] as Set, evidencePartition);
+    Database db1 = data.getDatabase(trainTargetPartition, [DrugTarget, Active] as Set, evidencePartition);
     
     //////////////////////////// weight learning ///////////////////////////
     Partition trueDataPartition = new Partition(2);
@@ -126,10 +99,10 @@ for (i=6; i<= 6; i++) {
     def testEvidencePartition = new Partition(4);
 
     insert = data.getInserter(DrugTarget, testEvidencePartition);
-    InserterUtils.loadDelimitedData(insert, dir+"drug_target.txt");
+    InserterUtils.loadDelimitedData(insert, dir+"drug_gene_targets.txt");
 
-    insert = data.getInserter(Essential, testEvidencePartition);
-    InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
+    insert = data.getInserter(Active, testEvidencePartition);
+    InserterUtils.loadDelimitedDataTruth(insert, dir+"cell_gene_activity.txt");
 
     insert = data.getInserter(ToPredict, testEvidencePartition);
     InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_val_to_predict.txt");
@@ -139,7 +112,7 @@ for (i=6; i<= 6; i++) {
     insert = data.getInserter(Sensitive, testTargetPartition);
     InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_val_to_predict.txt");
 
-    Database db2 = data.getDatabase(testTargetPartition, [DrugTarget, Essential, ToPredict] as Set, testEvidencePartition);
+    Database db2 = data.getDatabase(testTargetPartition, [DrugTarget, Active, ToPredict] as Set, testEvidencePartition);
 
     MPEInference inferenceApp2 = new MPEInference(m, db2, config);
     inferenceApp2.mpeInference();
@@ -147,9 +120,8 @@ for (i=6; i<= 6; i++) {
 
     println "saving inference results to result/"
     DecimalFormat formatter = new DecimalFormat("#.#######");
-    def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/essential_overlap/gene_drug_specific_rule_all_rules/fold${i}_result.txt");
+    def result_file = new File(result_folder + "fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {

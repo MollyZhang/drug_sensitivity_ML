@@ -29,7 +29,7 @@ import edu.umd.cs.psl.util.database.Queries;
 import edu.umd.cs.psl.evaluation.statistics.*;
 
 
-for (i=6; i<= 6; i++) {
+for (i=1; i<= 6; i++) {
     ////////////////////////// initial setup ////////////////////////
     ConfigManager cm = ConfigManager.getManager()
     ConfigBundle config = cm.getBundle("first-model")
@@ -61,10 +61,10 @@ for (i=6; i<= 6; i++) {
 
     def geneArg;
     def drugArg;
-    for( String gene : genes ){
-        geneArg = data.getUniqueID(gene);
-        for (String drug : drugs ){
-            drugArg = data.getUniqueID(drug);
+    for( String drug : drugs ){
+        drugArg = data.getUniqueID(drug);
+        for (String gene : genes ){
+            geneArg = data.getUniqueID(gene);
             m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
             m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
             m.add rule : ( ToPredict(C, drugArg) & DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
@@ -74,8 +74,8 @@ for (i=6; i<= 6; i++) {
             m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> Sensitive(C, drugArg),  weight : 1, squared : false
             m.add rule : ( ToPredict(C, drugArg) & ~DrugTarget(drugArg, geneArg) & ~Essential(C, geneArg) ) >> ~Sensitive(C, drugArg),  weight : 1, squared : false
         }
+        m.add rule : ( ToPredict(C2, drugArg) & Sensitive(C1, drugArg) & IsTissue(C1, T) & IsTissue(C2, T) ) >> Sensitive(C2, drugArg),  weight : 1, squared: false
     }
-    m.add rule : ( Sensitive(C1, D) & IsTissue(C1, T) & IsTissue(C2, T) & (C1-C2) ) >> Sensitive(C2, D),  weight : 1, squared: false
 
     
     println ""
@@ -95,6 +95,9 @@ for (i=6; i<= 6; i++) {
     insert = data.getInserter(Essential, evidencePartition);
     InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
    
+    insert = data.getInserter(IsTissue, evidencePartition);
+    InserterUtils.loadDelimitedData(insert, dir+"is_tissue.txt");
+
     insert = data.getInserter(ToPredict, evidencePartition);
     InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_train_to_predict.txt");
  
@@ -130,6 +133,9 @@ for (i=6; i<= 6; i++) {
 
     insert = data.getInserter(Essential, testEvidencePartition);
     InserterUtils.loadDelimitedDataTruth(insert, dir+"essential.txt");
+    
+    insert = data.getInserter(IsTissue, testEvidencePartition);
+    InserterUtils.loadDelimitedData(insert, dir+"is_tissue.txt");
 
     insert = data.getInserter(ToPredict, testEvidencePartition);
     InserterUtils.loadDelimitedData(insert, dir+target_dir+"fold${i}_val_to_predict.txt");
@@ -149,7 +155,7 @@ for (i=6; i<= 6; i++) {
     DecimalFormat formatter = new DecimalFormat("#.#######");
     def data_type = this.args[0].tokenize("/")[-1]
 
-    def result_file = new File("result/essential_overlap/gene_drug_specific_rule_all_rules/fold${i}_result.txt");
+    def result_file = new File("result/essential_overlap/gene_drug_tissue/fold${i}_result.txt");
     result_file.write ""
     for (GroundAtom atom : Queries.getAllAtoms(db2, Sensitive)) {
         for (int i=0; i<2; i++) {

@@ -33,7 +33,7 @@ for (i=1; i<= 6; i++) {
     println "fold ${i}"
     ////////////////////////// initial setup ////////////////////////
     ConfigManager cm = ConfigManager.getManager()
-    ConfigBundle config = cm.getBundle("first-model")
+    ConfigBundle config = cm.getBundle("simulation")
     
     def defaultPath = System.getProperty("java.io.tmpdir")
     String dbpath = config.getString("dbpath", defaultPath + File.separator + "first-model")
